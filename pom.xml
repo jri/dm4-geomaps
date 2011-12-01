@@ -7,7 +7,7 @@
     <name>DeepaMehta 4 Geomaps</name>
     <groupId>de.deepamehta</groupId>
     <artifactId>deepamehta-geomaps</artifactId>
-    <version>0.1</version>
+    <version>0.2-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <parent>

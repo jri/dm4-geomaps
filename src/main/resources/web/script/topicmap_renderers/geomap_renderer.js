@@ -16,6 +16,9 @@ function GeoMapRenderer() {
     var map                     // OpenLayers.Map object
     var marker_layers = {}      // Key: layer name, value: MarkerLayer object
 
+    var map_projection          // OpenStreetMap projection is EPSG:900913
+    var lonlat_projection = new OpenLayers.Projection("EPSG:4326")  // EPSG:4326 is lon/lat projection
+
     init_open_layers()
 
     // ------------------------------------------------------------------------------------------------------ Public API
@@ -83,7 +86,7 @@ function GeoMapRenderer() {
     }
 
     this.initial_topicmap_state = function() {
-        var center = transform(11, 51)  // default state is "Germany"
+        var center = new OpenLayers.LonLat(11, 51)      // default state is "Germany"
         return {
             "dm4.topicmaps.translation": {
                 "dm4.topicmaps.translation_x": center.lon,
@@ -124,7 +127,8 @@ function GeoMapRenderer() {
         map.addControl(new OpenLayers.Control.ZoomPanel())
         // map.addControl(new OpenLayers.Control.LayerSwitcher())
         map.events.register("moveend", undefined, on_move)
-        // map.setCenter(transform(11, 51), 6)
+        map_projection = map.getProjectionObject()
+        // map.setCenter(transform_to_map(11, 51), 6)
         //
         // for (var i = 0, ml; ml = marker_layer_info[i]; i++) {
         marker_layers["markers"] = new MarkerLayer("markers", "marker.png")
@@ -140,7 +144,7 @@ function GeoMapRenderer() {
         }()
 
         this.set_center = function(pos) {
-            map.setCenter(transform(pos.lon, pos.lat))
+            map.setCenter(transform_to_map(pos.lon, pos.lat))
         }*/
     }
 
@@ -173,6 +177,12 @@ function GeoMapRenderer() {
         }
     }
 
+    function add_marker(geo_facet) {
+        marker_layers["markers"].add_marker({lon: geo_facet.x, lat: geo_facet.y}, geo_facet)
+    }
+
+    // ---
+
     /**
      * Transforms lon/lat coordinates according to this map's projection.
      *
@@ -181,17 +191,12 @@ function GeoMapRenderer() {
      *
      * @return  an OpenLayers.LonLat object
      */
-    var transform = function() {
-        var projection = new OpenLayers.Projection("EPSG:4326")     // EPSG:4326 is lon/lat projection
-        return function(lon, lat) {
-            return new OpenLayers.LonLat(lon, lat).transform(
-                projection, map.getProjectionObject()
-            )
-        }
-    }()
+    function transform_to_map(lon, lat) {
+        return new OpenLayers.LonLat(lon, lat).transform(lonlat_projection, map_projection)
+    }
 
-    function add_marker(geo_facet) {
-        marker_layers["markers"].add_marker({lon: geo_facet.x, lat: geo_facet.y}, geo_facet)
+    function transform_to_lonlat(lon, lat) {
+        return new OpenLayers.LonLat(lon, lat).transform(map_projection, lonlat_projection)
     }
 
     // === Event Handler ===
@@ -200,7 +205,8 @@ function GeoMapRenderer() {
         // alert("on_move():\n\nevent=" + js.inspect(event) + "\n\nevent.object=" + js.inspect(event.object))
         // var center = map.getCenter()
         // alert("on_move():\n\ncenter: long=" + center.lon + ", lat=" + center.lat + "\n\nzoom=" + map.getZoom())
-        get_geomap().set_state(map.getCenter(), map.getZoom())
+        var center = map.getCenter()
+        get_geomap().set_state(transform_to_lonlat(center.lon, center.lat), map.getZoom())
     }
 
     // ------------------------------------------------------------------------------------------------- Private Classes
@@ -230,7 +236,7 @@ function GeoMapRenderer() {
                     markers_layer.removeMarker(markers[topic.id])
                 }
                 // Note: you should not share icons between markers. Clone them instead.
-                var marker = new OpenLayers.Marker(transform(pos.lon, pos.lat), icon.clone())
+                var marker = new OpenLayers.Marker(transform_to_map(pos.lon, pos.lat), icon.clone())
                 marker.events.register("click", topic, marker_clicked)
                 markers[topic.id] = marker
                 markers_layer.addMarker(marker)
@@ -271,7 +277,7 @@ function GeoMapRenderer() {
         // Model
         var info                        // The underlying Topicmap topic (a Topic object)
         var topics = {}                 // topics of this topicmap (key: topic ID, value: GeomapTopic object)
-        var center                      // map center (a OpenLayers.LonLat object)
+        var center                      // map center (an OpenLayers.LonLat object in lon/lat projection)
         var zoom                        // zoom level (integer)
         var selected_object_id = -1     // ID of the selected topic or association, or -1 for no selection
 
@@ -291,7 +297,7 @@ function GeoMapRenderer() {
 
         this.put_on_canvas = function(no_history_update) {
             dm4c.canvas.clear()
-            map.setCenter(center, zoom)
+            map.setCenter(transform_to_map(center.lon, center.lat), zoom)
             display_topics()
             restore_selection()
 
@@ -378,10 +384,13 @@ function GeoMapRenderer() {
 
         // ===
 
-        this.set_state = function(centr, zooom) {
+        /**
+         * @param   _center     an OpenLayers.LonLat object in lon/lat projection
+         */
+        this.set_state = function(_center, _zoom) {
             // update memory
-            center = centr
-            zoom = zooom
+            center = _center
+            zoom = _zoom
             // update DB
             dm4c.restc.set_geomap_state(topicmap_id, center, zoom)
         }
