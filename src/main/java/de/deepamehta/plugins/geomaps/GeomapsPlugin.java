@@ -11,7 +11,7 @@ import de.deepamehta.core.model.AssociationModel;
 import de.deepamehta.core.model.CompositeValue;
 import de.deepamehta.core.model.TopicModel;
 import de.deepamehta.core.model.TopicRoleModel;
-import de.deepamehta.core.service.ClientContext;
+import de.deepamehta.core.service.ClientState;
 import de.deepamehta.core.service.Directive;
 import de.deepamehta.core.service.Directives;
 import de.deepamehta.core.service.Plugin;
@@ -74,7 +74,7 @@ public class GeomapsPlugin extends Plugin implements GeomapsService {
         AssociationModel model = new AssociationModel("dm4.geomaps.geotopic_mapcontext",
             new TopicRoleModel(geomapId, "dm4.core.default"),
             new TopicRoleModel(topicId,  "dm4.topicmaps.topicmap_topic"));
-        Association refAssoc = dms.createAssociation(model, null);     // FIXME: clientContext=null
+        Association refAssoc = dms.createAssociation(model, null);     // FIXME: clientState=null
         // ### return refAssoc.getId();
     }
 
@@ -148,7 +148,7 @@ public class GeomapsPlugin extends Plugin implements GeomapsService {
     }
 
     @Override
-    public void postCreateHook(Topic topic, ClientContext clientContext, Directives directives) {
+    public void postCreateHook(Topic topic, ClientState clientState, Directives directives) {
         if (topic.getTypeUri().equals("dm4.contacts.address")) {
             //
             facetsService.associateWithFacetType(topic.getId(), "dm4.geomaps.geo_coordinate_facet");
@@ -157,7 +157,7 @@ public class GeomapsPlugin extends Plugin implements GeomapsService {
             if (!address.isEmpty()) {
                 logger.info("### New " + address);
                 LonLat geoCoordinate = address.geocode();
-                addGeoFacet(topic, geoCoordinate, clientContext, directives);
+                addGeoFacet(topic, geoCoordinate, clientState, directives);
             } else {
                 logger.info("### New empty address");
             }
@@ -165,14 +165,14 @@ public class GeomapsPlugin extends Plugin implements GeomapsService {
     }
 
     @Override
-    public void postUpdateHook(Topic topic, TopicModel oldTopic, ClientContext clientContext, Directives directives) {
+    public void postUpdateHook(Topic topic, TopicModel oldTopic, ClientState clientState, Directives directives) {
         if (topic.getTypeUri().equals("dm4.contacts.address")) {
             Address address    = new Address(topic.getCompositeValue());
             Address oldAddress = new Address(oldTopic.getCompositeValue());
             if (!address.equals(oldAddress)) {
                 logger.info("### Address changed:" + address.changeReport(oldAddress));
                 LonLat geoCoordinate = address.geocode();
-                addGeoFacet(topic, geoCoordinate, clientContext, directives);
+                addGeoFacet(topic, geoCoordinate, clientState, directives);
             } else {
                 logger.info("### Address not changed");
             }
@@ -186,15 +186,13 @@ public class GeomapsPlugin extends Plugin implements GeomapsService {
     /**
      * Stores a geo facet for an address topic in the DB.
      */
-    private void addGeoFacet(Topic addressTopic, LonLat geoCoordinate, ClientContext clientContext,
-                                                                       Directives directives) {
+    private void addGeoFacet(Topic addressTopic, LonLat geoCoordinate, ClientState clientState, Directives directives) {
         try {
             logger.info("Adding geo facet (" + geoCoordinate + ") to address " + addressTopic);
             TopicModel geoFacet = new TopicModel("dm4.geomaps.geo_coordinate", new CompositeValue()
                 .put("dm4.geomaps.longitude", geoCoordinate.lon)
                 .put("dm4.geomaps.latitude",  geoCoordinate.lat));
-            facetsService.addFacet(addressTopic, "dm4.geomaps.geo_coordinate_facet", geoFacet,
-                clientContext, directives);
+            facetsService.addFacet(addressTopic, "dm4.geomaps.geo_coordinate_facet", geoFacet, clientState, directives);
         } catch (Exception e) {
             throw new RuntimeException("Adding geo facet to address topic failed");
         }
