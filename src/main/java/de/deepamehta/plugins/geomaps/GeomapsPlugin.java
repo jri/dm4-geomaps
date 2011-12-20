@@ -165,10 +165,11 @@ public class GeomapsPlugin extends Plugin implements GeomapsService {
     }
 
     @Override
-    public void postUpdateHook(Topic topic, TopicModel oldTopic, ClientState clientState, Directives directives) {
+    public void postUpdateHook(Topic topic, TopicModel newModel, TopicModel oldModel, ClientState clientState,
+                                                                                      Directives directives) {
         if (topic.getTypeUri().equals("dm4.contacts.address")) {
             Address address    = new Address(topic.getCompositeValue());
-            Address oldAddress = new Address(oldTopic.getCompositeValue());
+            Address oldAddress = new Address(oldModel.getCompositeValue());
             if (!address.equals(oldAddress)) {
                 logger.info("### Address changed:" + address.changeReport(oldAddress));
                 LonLat geoCoordinate = address.geocode();
