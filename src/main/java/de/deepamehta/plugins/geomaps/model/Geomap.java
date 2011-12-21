@@ -91,7 +91,7 @@ public class Geomap implements JSONEnabled {
 
     private void loadTopics() {
         ResultSet<RelatedTopic> mapTopics = topicmapTopic.getRelatedTopics("dm4.geomaps.geotopic_mapcontext",
-            "dm4.core.default", "dm4.topicmaps.topicmap_topic", null, true, false, 0);  // othersTopicTypeUri=null
+            "dm4.core.default", "dm4.topicmaps.topicmap_topic", null, true, false, 0, null);  // othersTopicTypeUri=null
                                                                                         // fetchComposite=true
                                                                                         // fetchRelatingComposite=false
                                                                                         // maxResultSize=0

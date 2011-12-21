@@ -24,6 +24,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.POST;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -81,17 +82,17 @@ public class GeomapsPlugin extends Plugin implements GeomapsService {
     @GET
     @Path("/topic/{id}")
     @Override
-    public Topic getGeoTopic(@PathParam("id") long topicId) {
+    public Topic getGeoTopic(@PathParam("id") long topicId, @HeaderParam("Cookie") ClientState clientState) {
         try {
-            Topic topic = dms.getTopic(topicId, true, null);
+            Topic topic = dms.getTopic(topicId, true, clientState);
             RelatedTopic parentTopic;
             while ((parentTopic = topic.getRelatedTopic(null, "dm4.core.part", "dm4.core.whole", null,
-                    true, false)) != null) {
+                    true, false, clientState)) != null) {
                 topic = parentTopic;
             }
             return topic;
         } catch (Exception e) {
-            throw new RuntimeException("Finding the geo coordinate's parent topic failed (topicId=" + topicId + ")");
+            throw new RuntimeException("Finding the geo coordinate's parent topic failed (topicId=" + topicId + ")", e);
         }
     }
 
@@ -135,14 +136,14 @@ public class GeomapsPlugin extends Plugin implements GeomapsService {
     // ---
 
     @Override
-    public void postFetchTopicHook(Topic topic) {
+    public void postFetchTopicHook(Topic topic, ClientState clientState, Directives directives) {
         if (topic.getTypeUri().equals("dm4.contacts.address")) {
             Topic geoFacet = facetsService.getFacet(topic, "dm4.geomaps.geo_coordinate_facet");
             if (geoFacet != null) {
-                logger.info("### Extending composite of address " + topic.getId() + " with geo facet");
+                logger.info("### Retrieving geo facet of address " + topic.getId());
                 topic.getCompositeValue().put("dm4.geomaps.geo_coordinate", geoFacet.getModel());
             } else {
-                logger.info("### Extending composite of address " + topic.getId() + " ABORTED -- no geo facet in DB");
+                logger.info("### Retrieving geo facet of address " + topic.getId() + " ABORTED -- no geo facet in DB");
             }
         }
     }
@@ -157,7 +158,7 @@ public class GeomapsPlugin extends Plugin implements GeomapsService {
             if (!address.isEmpty()) {
                 logger.info("### New " + address);
                 LonLat geoCoordinate = address.geocode();
-                addGeoFacet(topic, geoCoordinate, clientState, directives);
+                storeGeoFacet(topic, geoCoordinate, clientState, directives);
             } else {
                 logger.info("### New empty address");
             }
@@ -173,7 +174,7 @@ public class GeomapsPlugin extends Plugin implements GeomapsService {
             if (!address.equals(oldAddress)) {
                 logger.info("### Address changed:" + address.changeReport(oldAddress));
                 LonLat geoCoordinate = address.geocode();
-                addGeoFacet(topic, geoCoordinate, clientState, directives);
+                storeGeoFacet(topic, geoCoordinate, clientState, directives);
             } else {
                 logger.info("### Address not changed");
             }
@@ -187,15 +188,16 @@ public class GeomapsPlugin extends Plugin implements GeomapsService {
     /**
      * Stores a geo facet for an address topic in the DB.
      */
-    private void addGeoFacet(Topic addressTopic, LonLat geoCoordinate, ClientState clientState, Directives directives) {
+    private void storeGeoFacet(Topic addressTopic, LonLat geoCoordinate, ClientState clientState,
+                                                                         Directives directives) {
         try {
-            logger.info("Adding geo facet (" + geoCoordinate + ") to address " + addressTopic);
+            logger.info("Storing geo facet (" + geoCoordinate + ") of address " + addressTopic);
             TopicModel geoFacet = new TopicModel("dm4.geomaps.geo_coordinate", new CompositeValue()
                 .put("dm4.geomaps.longitude", geoCoordinate.lon)
                 .put("dm4.geomaps.latitude",  geoCoordinate.lat));
-            facetsService.addFacet(addressTopic, "dm4.geomaps.geo_coordinate_facet", geoFacet, clientState, directives);
+            facetsService.setFacet(addressTopic, "dm4.geomaps.geo_coordinate_facet", geoFacet, clientState, directives);
         } catch (Exception e) {
-            throw new RuntimeException("Adding geo facet to address topic failed");
+            throw new RuntimeException("Storing geo facet of address " + addressTopic.getId() + " failed", e);
         }
     }
 

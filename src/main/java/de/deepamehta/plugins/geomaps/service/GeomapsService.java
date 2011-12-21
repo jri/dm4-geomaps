@@ -2,6 +2,7 @@ package de.deepamehta.plugins.geomaps.service;
 
 import de.deepamehta.plugins.geomaps.model.Geomap;
 import de.deepamehta.core.Topic;
+import de.deepamehta.core.service.ClientState;
 import de.deepamehta.core.service.PluginService;
 
 
@@ -12,7 +13,7 @@ public interface GeomapsService extends PluginService {
 
     void addTopicToGeomap(long geomapId, long topicId);
 
-    Topic getGeoTopic(long topicId);
+    Topic getGeoTopic(long topicId, ClientState clientState);
 
     void setGeomapState(long geomapId, double lon, double lat, int zoom);
 }
