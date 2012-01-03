@@ -26,12 +26,7 @@ function geomaps_plugin() {
 
     // === Topicmaps Handler ===
 
-    if (dm4c.get_plugin("topicmaps_plugin")) {
-        dm4c.register_plugin_handler("topicmap_renderer", function() {
-            return new GeoMapRenderer()
-        })
-    } else {
-        // ### FIXME
-        alert("WARNING from geomaps_plugin: GeoMapRenderer will not be available. Topicmaps module is not yet loaded")
-    }
+    dm4c.register_plugin_handler("topicmap_renderer", function() {
+        return new GeoMapRenderer()
+    })
 }
