@@ -5,11 +5,11 @@ function geomaps_plugin() {
     dm4c.javascript_source("/de.deepamehta.geomaps/script/topicmap_renderers/geomap_renderer.js")
     dm4c.javascript_source("/de.deepamehta.geomaps/script/vendor/openlayers/OpenLayers.js")
 
-    // extend REST client
-    //
+    // === REST Client Extension ===
+
     // Note: this is done at plugin instantiation time (*before* the webclient's init() hook is triggered)
     // because a geomap might be loaded at init() time through the topicmaps plugin.
-    //
+
     dm4c.restc.get_geotopic = function(topic_id) {
         return this.request("GET", "/geomap/topic/" + topic_id)
     }
@@ -24,17 +24,14 @@ function geomaps_plugin() {
             "/zoom/" + zoom)
     }
 
+    // === Topicmaps Handler ===
 
-
-    // ***********************************************************
-    // *** Topicmaps Hooks (triggered by deepamehta-topicmaps) ***
-    // ***********************************************************
-
-
-
-    this.topicmap_renderer = function() {
-        return new GeoMapRenderer()
+    if (dm4c.get_plugin("topicmaps_plugin")) {
+        dm4c.register_plugin_handler("topicmap_renderer", function() {
+            return new GeoMapRenderer()
+        })
+    } else {
+        // ### FIXME
+        alert("WARNING from geomaps_plugin: GeoMapRenderer will not be available. Topicmaps module is not yet loaded")
     }
-
-    // ----------------------------------------------------------------------------------------------- Private Functions
 }
