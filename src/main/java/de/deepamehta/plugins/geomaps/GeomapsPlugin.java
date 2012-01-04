@@ -6,6 +6,7 @@ import de.deepamehta.plugins.facets.service.FacetsService;
 
 import de.deepamehta.core.Association;
 import de.deepamehta.core.RelatedTopic;
+import de.deepamehta.core.ResultSet;
 import de.deepamehta.core.Topic;
 import de.deepamehta.core.model.AssociationModel;
 import de.deepamehta.core.model.CompositeValue;
@@ -65,6 +66,13 @@ public class GeomapsPlugin extends Plugin implements GeomapsService {
     @Override
     public Geomap getGeomap(@PathParam("id") long geomapId) {
         return new Geomap(geomapId, dms);
+    }
+
+    @GET
+    @Path("/{id}/topics")
+    @Override
+    public ResultSet<RelatedTopic> getGeomapTopics(@PathParam("id") long geomapId) {
+        return Geomap.fetchGeomapTopics(geomapId, dms);
     }
 
     @PUT
@@ -135,15 +143,19 @@ public class GeomapsPlugin extends Plugin implements GeomapsService {
 
     // ---
 
+    /**
+     * Enriches an Address topic with its Geo Coordinate facet.
+     */
     @Override
     public void postFetchTopicHook(Topic topic, ClientState clientState, Directives directives) {
         if (topic.getTypeUri().equals("dm4.contacts.address")) {
             Topic geoFacet = facetsService.getFacet(topic, "dm4.geomaps.geo_coordinate_facet");
             if (geoFacet != null) {
-                logger.info("### Retrieving geo facet of address " + topic.getId());
+                logger.info("### Enriching address " + topic.getId() + " with its geo facet");
                 topic.getCompositeValue().put("dm4.geomaps.geo_coordinate", geoFacet.getModel());
             } else {
-                logger.info("### Retrieving geo facet of address " + topic.getId() + " ABORTED -- no geo facet in DB");
+                logger.info("### Enriching address " + topic.getId() + " with its geo facet ABORTED " +
+                    "-- no geo facet in DB");
             }
         }
     }

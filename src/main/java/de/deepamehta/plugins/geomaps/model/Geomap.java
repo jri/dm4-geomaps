@@ -36,7 +36,7 @@ public class Geomap implements JSONEnabled {
 
     // ---------------------------------------------------------------------------------------------- Instance Variables
 
-    protected Topic topicmapTopic;
+    protected Topic geomapTopic;
     protected Map<Long, GeomapTopic> topics = new HashMap();
 
     protected DeepaMehtaService dms;
@@ -48,8 +48,8 @@ public class Geomap implements JSONEnabled {
     /**
      * Loads a topicmap from the DB.
      */
-    public Geomap(long topicmapId, DeepaMehtaService dms) {
-        this.topicmapTopic = dms.getTopic(topicmapId, true, null);  // fetchComposite=true
+    public Geomap(long geomapId, DeepaMehtaService dms) {
+        this.geomapTopic = dms.getTopic(geomapId, true, null);      // fetchComposite=true, clientContext=null
         this.dms = dms;
         //
         logger.info("Loading geomap " + getId());
@@ -59,10 +59,15 @@ public class Geomap implements JSONEnabled {
     // -------------------------------------------------------------------------------------------------- Public Methods
 
     public long getId() {
-        return topicmapTopic.getId();
+        return geomapTopic.getId();
     }
 
     // ---
+
+    public static ResultSet<RelatedTopic> fetchGeomapTopics(long geomapId, DeepaMehtaService dms) {
+        Topic geomapTopic = dms.getTopic(geomapId, false, null);    // fetchComposite=false, clientContext=null
+        return fetchGeomapTopics(geomapTopic, false);               // fetchComposite=false
+    }
 
     public boolean containsTopic(long topicId) {
         return topics.get(topicId) != null;
@@ -74,7 +79,7 @@ public class Geomap implements JSONEnabled {
     public JSONObject toJSON() {
         try {
             JSONObject topicmap = new JSONObject();
-            topicmap.put("info", topicmapTopic.toJSON());
+            topicmap.put("info", geomapTopic.toJSON());
             topicmap.put("topics", JSONHelper.objectsToJSON(topics.values()));
             return topicmap;
         } catch (JSONException e) {
@@ -90,15 +95,17 @@ public class Geomap implements JSONEnabled {
     // ------------------------------------------------------------------------------------------------- Private Methods
 
     private void loadTopics() {
-        ResultSet<RelatedTopic> mapTopics = topicmapTopic.getRelatedTopics("dm4.geomaps.geotopic_mapcontext",
-            "dm4.core.default", "dm4.topicmaps.topicmap_topic", null, true, false, 0, null);  // othersTopicTypeUri=null
-                                                                                        // fetchComposite=true
-                                                                                        // fetchRelatingComposite=false
-                                                                                        // maxResultSize=0
+        ResultSet<RelatedTopic> mapTopics = fetchGeomapTopics(geomapTopic, true);     // fetchComposite=true
         for (RelatedTopic mapTopic : mapTopics) {
             Association refAssoc = mapTopic.getAssociation();
             addTopic(new GeomapTopic(mapTopic.getModel(), refAssoc.getId()));
         }
+    }
+
+    private static ResultSet<RelatedTopic> fetchGeomapTopics(Topic geomapTopic, boolean fetchComposite) {
+        return geomapTopic.getRelatedTopics("dm4.geomaps.geotopic_mapcontext", "dm4.core.default",
+            "dm4.topicmaps.topicmap_topic", "dm4.geomaps.geo_coordinate", fetchComposite, false, 0, null);
+            // fetchRelatingComposite=false, maxResultSize=0, clientContext=null
     }
 
     private void addTopic(GeomapTopic topic) {
