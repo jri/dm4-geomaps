@@ -160,10 +160,9 @@ function GeoMapRenderer() {
      * @return  A "Geo Coordinate" topic extended with "x" and "y" properties (a Topic object).
      */
     function get_geo_facet(address) {
-        var geo_facet = address.composite["dm4.geomaps.geo_coordinate"]
+        var geo_facet = address.get("dm4.geomaps.geo_coordinate")
         if (geo_facet) {
             var pos = position(geo_facet)
-            geo_facet = new Topic(geo_facet)
             geo_facet.x = pos.x
             geo_facet.y = pos.y
             return geo_facet
@@ -172,8 +171,8 @@ function GeoMapRenderer() {
 
     function position(geo_facet) {
         return {
-            x: geo_facet.composite["dm4.geomaps.longitude"].value,
-            y: geo_facet.composite["dm4.geomaps.latitude"].value
+            x: geo_facet.get("dm4.geomaps.longitude"),
+            y: geo_facet.get("dm4.geomaps.latitude")
         }
     }
 
@@ -406,18 +405,18 @@ function GeoMapRenderer() {
 
             function init_topics() {
                 for (var i = 0, topic; topic = topicmap.topics[i]; i++) {
-                    var pos = position(topic)
+                    var pos = position(new Topic(topic))
                     topics[topic.id] = new GeomapTopic(topic.id, topic.type_uri, topic.value, pos.x, pos.y)
                 }
             }
 
             function init_state() {
-                var state = info.composite["dm4.topicmaps.state"]
-                var trans = new Topic(state.composite["dm4.topicmaps.translation"])
+                var state = info.get("dm4.topicmaps.state")
+                var trans = state.get("dm4.topicmaps.translation")
                 var lon = trans.get("dm4.topicmaps.translation_x")
                 var lat = trans.get("dm4.topicmaps.translation_y")
                 center = new OpenLayers.LonLat(lon, lat)
-                zoom = state.composite["dm4.topicmaps.zoom_level"].value
+                zoom = state.get("dm4.topicmaps.zoom_level")
             }
         }
 
