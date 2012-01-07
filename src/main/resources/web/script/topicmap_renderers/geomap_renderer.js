@@ -14,7 +14,7 @@ function GeoMapRenderer() {
     this.dom = $("<div>", {id: "canvas"})
 
     var map                     // OpenLayers.Map object
-    var marker_layers = {}      // Key: layer name, value: MarkerLayer object
+    var feature_layers = {}     // Key: layer name, value: FeatureLayer object
 
     var map_projection          // OpenStreetMap projection is EPSG:900913
     var lonlat_projection = new OpenLayers.Projection("EPSG:4326")  // EPSG:4326 is lon/lat projection
@@ -43,7 +43,7 @@ function GeoMapRenderer() {
                     "at x=" + geo_facet.x + ", y=" + geo_facet.y + "\n..... Original address topic=" +
                     JSON.stringify(address))
                 // update view
-                add_marker(geo_facet)
+                add_feature(geo_facet)
                 // setup replacement topic for selection model
                 select = geo_facet
             } else {
@@ -68,7 +68,7 @@ function GeoMapRenderer() {
     }
 
     this.clear = function() {
-        marker_layers["markers"].remove_all_markers()
+        feature_layers["features"].remove_all_features()
     }
 
     this.select_topic = function(topic_id) {
@@ -131,7 +131,7 @@ function GeoMapRenderer() {
         // map.setCenter(transform_to_map(11, 51), 6)
         //
         // for (var i = 0, ml; ml = marker_layer_info[i]; i++) {
-        marker_layers["markers"] = new MarkerLayer("markers", "marker.png")
+        feature_layers["features"] = new FeatureLayer("features")
         // }
 
         // === Public API ===
@@ -176,8 +176,8 @@ function GeoMapRenderer() {
         }
     }
 
-    function add_marker(geo_facet) {
-        marker_layers["markers"].add_marker({lon: geo_facet.x, lat: geo_facet.y}, geo_facet)
+    function add_feature(geo_facet) {
+        feature_layers["features"].add_feature({lon: geo_facet.x, lat: geo_facet.y}, geo_facet)
     }
 
     // ---
@@ -211,57 +211,50 @@ function GeoMapRenderer() {
     // ------------------------------------------------------------------------------------------------- Private Classes
 
     /**
-     * Wraps an OpenLayers markers layer and binds markers to topics. Provides two methods:
-     *     - add_marker(pos, topic)
-     *     - remove_marker(topic_id)
+     * Wraps an OpenLayers vector layer and binds features to topics. Provides two methods:
+     *     - add_feature(pos, topic)
+     *     - remove_feature(topic_id)
      */
-    function MarkerLayer(layer_name, icon_file) {
+    function FeatureLayer(layer_name) {
         var self = this
-        var markers = {}    // holds the OpenLayers.Marker objects, keyed by topic ID
-        var markers_layer = new OpenLayers.Layer.Markers(layer_name)
-        map.addLayer(markers_layer)
+        var features = {}   // holds the OpenLayers.Feature.Vector objects, keyed by topic ID
+        var vector_layer = new OpenLayers.Layer.Vector(layer_name)
+        map.addLayer(vector_layer)
 
         // === Public API ===
 
-        this.add_marker = function() {
-            var size = new OpenLayers.Size(21, 25)
-            var offset = new OpenLayers.Pixel(-size.w / 2, -size.h)
-            var icon = new OpenLayers.Icon('/de.deepamehta.geomaps/script/vendor/openlayers/img/' +
-                icon_file, size, offset)
-
-            return function(pos, topic) {
-                // if the marker is already on the map, remove it
-                if (markers[topic.id]) {
-                    markers_layer.removeMarker(markers[topic.id])
-                }
-                // Note: you should not share icons between markers. Clone them instead.
-                var marker = new OpenLayers.Marker(transform_to_map(pos.lon, pos.lat), icon.clone())
-                marker.events.register("click", topic, marker_clicked)
-                markers[topic.id] = marker
-                markers_layer.addMarker(marker)
-
-                function marker_clicked() {
-                    dm4c.do_select_topic(this.id)
-                }
+        this.add_feature = function(pos, topic) {
+            // if the feature is already on the map, remove it
+            if (features[topic.id]) {
+                vector_layer.removeFeatures([features[topic.id]])
             }
-        }()
+            //
+            var p = transform_to_map(pos.lon, pos.lat)
+            var geometry = new OpenLayers.Geometry.Point(p.lon, p.lat)
+            var feature = new OpenLayers.Feature.Vector(geometry)
+            // ### marker.events.register("click", topic, marker_clicked)
+            features[topic.id] = feature
+            vector_layer.addFeatures([feature])
 
-        this.remove_marker = function(topic_id) {
-            markers_layer.removeMarker(markers[topic_id])
-            // ### TODO: delete from markers object
+            function feature_clicked() {
+                dm4c.do_select_topic(this.id)
+            }
         }
 
-        this.remove_all_markers = function() {
-            iterate_markers(function(marker) {
-                markers_layer.removeMarker(marker)
-            })
+        this.remove_feature = function(topic_id) {
+            vector_layer.removeFeatures([features[topic_id]])
+            // ### TODO: delete from features object
+        }
+
+        this.remove_all_features = function() {
+            vector_layer.removeAllFeatures()
         }
 
         // ---
 
-        function iterate_markers(visitor_func) {
-            for (var topic_id in markers) {
-                visitor_func(markers[topic_id])
+        function iterate_features(visitor_func) {
+            for (var topic_id in features) {
+                visitor_func(features[topic_id])
             }
         }
     }
@@ -302,7 +295,7 @@ function GeoMapRenderer() {
 
             function display_topics() {
                 for (var id in topics) {
-                    add_marker(topics[id])
+                    add_feature(topics[id])
                 }
             }
 
@@ -355,7 +348,7 @@ function GeoMapRenderer() {
                         // update model
                         this.add_topic(geo_facet.id, geo_facet.type_uri, "", geo_facet.x, geo_facet.y)
                         // update view
-                        add_marker(geo_facet)
+                        add_feature(geo_facet)
                     }
                 }
             }
