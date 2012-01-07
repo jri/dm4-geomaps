@@ -278,7 +278,7 @@ function GeoMapRenderer() {
         var topics = {}                 // topics of this topicmap (key: topic ID, value: GeomapTopic object)
         var center                      // map center (an OpenLayers.LonLat object in lon/lat projection)
         var zoom                        // zoom level (integer)
-        var selected_object_id = -1     // ID of the selected topic or association, or -1 for no selection
+        var selected_object_id = -1     // ID of the selected topic, or -1 for no selection
 
         load()
 
@@ -365,6 +365,12 @@ function GeoMapRenderer() {
         }
 
         this.delete_topic = function(id) {
+            var topic = topics[id]
+            if (topic) {
+                if (LOG_GEOMAPS) dm4c.log("..... Deleting topic " + id + " (\"" + topic.label + "\") from geomap " +
+                    topicmap_id)
+                topic.remove()
+            }
         }
 
         this.delete_association = function(id) {
@@ -431,6 +437,19 @@ function GeoMapRenderer() {
             this.value = value
             this.x = x
             this.y = y
+
+            this.remove = function() {
+                delete topics[id]
+                reset_selection()
+            }
+
+            // ---
+
+            function reset_selection() {
+                if (selected_object_id == id) {
+                    selected_object_id = -1
+                }
+            }
         }
     }
 }
