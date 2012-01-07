@@ -361,6 +361,9 @@ function GeoMapRenderer() {
             }
         }
 
+        this.update_association = function(assoc) {
+        }
+
         this.delete_topic = function(id) {
         }
 
