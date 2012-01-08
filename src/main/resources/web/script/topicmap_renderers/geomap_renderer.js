@@ -53,7 +53,7 @@ function GeoMapRenderer() {
     }
 
     this.clear = function() {
-        ol_view.clear()
+        ol_view.remove_all_features()
     }
 
     this.select_topic = function(topic_id) {
@@ -94,6 +94,12 @@ function GeoMapRenderer() {
 
     this.resize_end = function() {
         ol_view.update_size()
+    }
+
+    // ===
+
+    this.click_feature = function(topic_id) {
+        ol_view.click_feature(topic_id)
     }
 
     // ----------------------------------------------------------------------------------------------- Private Functions

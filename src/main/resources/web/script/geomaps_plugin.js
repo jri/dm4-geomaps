@@ -31,4 +31,13 @@ function geomaps_plugin() {
     dm4c.register_plugin_handler("topicmap_renderer", function() {
         return new GeoMapRenderer()
     })
+
+    // ------------------------------------------------------------------------------------------------------ Public API
+
+    this.get_geo_facet = function(geo_topic) {
+        var address = geo_topic.find_child_topic("dm4.contacts.address")
+        if (address) {
+            return address.get("dm4.geomaps.geo_coordinate")
+        }
+    }
 }

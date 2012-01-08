@@ -26,26 +26,35 @@ function OpenLayersView(config) {
 
     // ------------------------------------------------------------------------------------------------------ Public API
 
+    // === The Map ===
+
     this.render = function(container) {
         map.render(container)
     }
 
-    this.add_feature = function(geo_facet) {
-        feature_layers["features"].add_feature({lon: geo_facet.x, lat: geo_facet.y}, geo_facet)
-    }
-
-    this.clear = function() {
-        feature_layers["features"].remove_all_features()
+    this.set_center = function(center, zoom) {
+        map.setCenter(transform_to_map(center.lon, center.lat), zoom)
     }
 
     this.update_size = function() {
         map.updateSize()
     }
 
-    // ---
+    // === Features ===
 
-    this.set_center = function(center, zoom) {
-        map.setCenter(transform_to_map(center.lon, center.lat), zoom)
+    this.add_feature = function(geo_facet) {
+        feature_layers["features"].add_feature({lon: geo_facet.x, lat: geo_facet.y}, geo_facet)
+    }
+
+    this.remove_all_features = function() {
+        feature_layers["features"].remove_all_features()
+    }
+
+    /**
+     * Clicks a feature programatically.
+     */
+    this.click_feature = function(geo_facet_id) {
+        feature_layers["features"].click_feature(geo_facet_id)
     }
 
 
@@ -106,11 +115,13 @@ function OpenLayersView(config) {
             default: default_style,
             select: select_style
         })
+        // create vector layer
         var vector_layer = new OpenLayers.Layer.Vector(layer_name, {styleMap: style_map})
-        var select = new OpenLayers.Control.SelectFeature(vector_layer, {onSelect: do_select_feature})
         map.addLayer(vector_layer)
-        map.addControl(select)
-        select.activate()
+        // add SelectFeature control
+        var select_control = new OpenLayers.Control.SelectFeature(vector_layer, {onSelect: do_select_feature})
+        map.addControl(select_control)
+        select_control.activate()
 
         // === Public API ===
 
@@ -138,14 +149,16 @@ function OpenLayersView(config) {
 
         // ---
 
-        function do_select_feature(feature) {
-            dm4c.do_select_topic(feature.attributes.topic_id)
+        this.click_feature = function(topic_id) {
+            // alert("Click feature programatically")
+            select_control.clickFeature(features[topic_id])
         }
 
-        function iterate_features(visitor_func) {
-            for (var topic_id in features) {
-                visitor_func(features[topic_id])
-            }
+        // ---
+
+        function do_select_feature(feature) {
+            // alert("do_select_feature()")
+            dm4c.do_select_topic(feature.attributes.topic_id)
         }
     }
 }
