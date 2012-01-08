@@ -216,29 +216,33 @@ function GeoMapRenderer() {
      *     - remove_feature(topic_id)
      */
     function FeatureLayer(layer_name) {
-        var self = this
         var features = {}   // holds the OpenLayers.Feature.Vector objects, keyed by topic ID
-        var vector_layer = new OpenLayers.Layer.Vector(layer_name)
+        var style = {
+            fillColor: "#ff0000",
+            fillOpacity: 0.4,
+            strokeColor: "#000000",
+            strokeOpacity: 1,
+            pointRadius: 8
+        }
+        var vector_layer = new OpenLayers.Layer.Vector(layer_name, {style: style})
+        var select = new OpenLayers.Control.SelectFeature(vector_layer, {onSelect: do_select_feature})
         map.addLayer(vector_layer)
+        map.addControl(select)
+        select.activate()
 
         // === Public API ===
 
         this.add_feature = function(pos, topic) {
-            // if the feature is already on the map, remove it
+            // remove feature if already on the map
             if (features[topic.id]) {
                 vector_layer.removeFeatures([features[topic.id]])
             }
-            //
+            // create feature
             var p = transform_to_map(pos.lon, pos.lat)
             var geometry = new OpenLayers.Geometry.Point(p.lon, p.lat)
-            var feature = new OpenLayers.Feature.Vector(geometry)
-            // ### marker.events.register("click", topic, marker_clicked)
+            var feature = new OpenLayers.Feature.Vector(geometry, {topic_id: topic.id})
             features[topic.id] = feature
             vector_layer.addFeatures([feature])
-
-            function feature_clicked() {
-                dm4c.do_select_topic(this.id)
-            }
         }
 
         this.remove_feature = function(topic_id) {
@@ -251,6 +255,10 @@ function GeoMapRenderer() {
         }
 
         // ---
+
+        function do_select_feature(feature) {
+            dm4c.do_select_topic(feature.attributes.topic_id)
+        }
 
         function iterate_features(visitor_func) {
             for (var topic_id in features) {
