@@ -1,4 +1,20 @@
-function OpenLayersHelper(config) {
+function OpenLayersView(config) {
+
+    // style preferences
+    var default_style = {
+        fillColor: "#ff00ff",
+        fillOpacity: 0.4,
+        strokeColor: "#000000",
+        strokeOpacity: 1,
+        strokeWidth: 2,
+        pointRadius: 8
+    }
+    var select_style = {
+        fillOpacity: 1,
+        strokeOpacity: 0.3,
+        strokeWidth: 10,
+        pointRadius: 12
+    }
 
     var map                     // OpenLayers.Map object
     var feature_layers = {}     // Key: layer name, value: FeatureLayer object
@@ -86,14 +102,11 @@ function OpenLayersHelper(config) {
      */
     function FeatureLayer(layer_name) {
         var features = {}   // holds the OpenLayers.Feature.Vector objects, keyed by topic ID
-        var style = {
-            fillColor: "#ff0000",
-            fillOpacity: 0.4,
-            strokeColor: "#000000",
-            strokeOpacity: 1,
-            pointRadius: 8
-        }
-        var vector_layer = new OpenLayers.Layer.Vector(layer_name, {style: style})
+        var style_map = new OpenLayers.StyleMap({
+            default: default_style,
+            select: select_style
+        })
+        var vector_layer = new OpenLayers.Layer.Vector(layer_name, {styleMap: style_map})
         var select = new OpenLayers.Control.SelectFeature(vector_layer, {onSelect: do_select_feature})
         map.addLayer(vector_layer)
         map.addControl(select)

@@ -11,7 +11,7 @@ function GeoMapRenderer() {
 
     this.dom = $("<div>", {id: "canvas"})
 
-    var olh = new OpenLayersHelper({move_handler: on_move})
+    var ol_view = new OpenLayersView({move_handler: on_move})
 
     var LOG_GEOMAPS = false
 
@@ -53,7 +53,7 @@ function GeoMapRenderer() {
     }
 
     this.clear = function() {
-        olh.clear()
+        ol_view.clear()
     }
 
     this.select_topic = function(topic_id) {
@@ -67,7 +67,7 @@ function GeoMapRenderer() {
     // === TopicmapRenderer Topicmaps Extension ===
 
     this.load_topicmap = function(topicmap_id) {
-        return new Geomap(topicmap_id, olh)
+        return new Geomap(topicmap_id, ol_view)
     }
 
     this.initial_topicmap_state = function() {
@@ -84,7 +84,7 @@ function GeoMapRenderer() {
     // === Left SplitPanel Component Implementation ===
 
     this.init = function() {
-        olh.render("canvas")
+        ol_view.render("canvas")
     }
 
     this.resize = function(size) {
@@ -93,13 +93,13 @@ function GeoMapRenderer() {
     }
 
     this.resize_end = function() {
-        olh.update_size()
+        ol_view.update_size()
     }
 
     // ----------------------------------------------------------------------------------------------- Private Functions
 
     function add_feature(geo_facet) {
-        olh.add_feature(geo_facet)
+        ol_view.add_feature(geo_facet)
     }
 
     // === Event Handler ===

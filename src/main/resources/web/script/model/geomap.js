@@ -2,9 +2,9 @@
  * A topicmap model that is attached to the database.
  *
  * ### FIXME: introduce common base class for Geomap and Topicmap (see deepamehta-topicmaps module)
- * ### FIXME: remove "olh" constructor argument. A model must not rely on the view.
+ * ### FIXME: remove "ol_view" constructor argument. A model must not depend on the view.
  */
-function Geomap(topicmap_id, olh) {
+function Geomap(topicmap_id, ol_view) {
 
     var LOG_GEOMAPS = false
 
@@ -31,13 +31,13 @@ function Geomap(topicmap_id, olh) {
 
     this.put_on_canvas = function(no_history_update) {
         dm4c.canvas.clear()
-        olh.set_center(center, zoom)
+        ol_view.set_center(center, zoom)
         display_topics()
         restore_selection()
 
         function display_topics() {
             for (var id in topics) {
-                olh.add_feature(topics[id])
+                ol_view.add_feature(topics[id])
             }
         }
 
@@ -90,7 +90,7 @@ function Geomap(topicmap_id, olh) {
                     // update model
                     this.add_topic(geo_facet.id, geo_facet.type_uri, "", geo_facet.x, geo_facet.y)
                     // update view
-                    olh.add_feature(geo_facet)
+                    ol_view.add_feature(geo_facet)
                 }
             }
         }
