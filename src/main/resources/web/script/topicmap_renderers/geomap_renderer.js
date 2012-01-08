@@ -57,7 +57,7 @@ function GeoMapRenderer() {
     }
 
     this.select_topic = function(topic_id) {
-        // ### set_highlight_object(topic_id)
+        ol_view.select_feature(topic_id)
         return {
             select: dm4c.fetch_topic(topic_id),
             display: new Topic(dm4c.restc.get_geotopic(topic_id))
@@ -94,12 +94,6 @@ function GeoMapRenderer() {
 
     this.resize_end = function() {
         ol_view.update_size()
-    }
-
-    // ===
-
-    this.click_feature = function(topic_id) {
-        ol_view.click_feature(topic_id)
     }
 
     // ----------------------------------------------------------------------------------------------- Private Functions

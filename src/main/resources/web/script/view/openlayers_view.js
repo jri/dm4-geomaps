@@ -46,15 +46,12 @@ function OpenLayersView(config) {
         feature_layers["features"].add_feature({lon: geo_facet.x, lat: geo_facet.y}, geo_facet)
     }
 
-    this.remove_all_features = function() {
-        feature_layers["features"].remove_all_features()
+    this.select_feature = function(geo_facet_id) {
+        feature_layers["features"].select_feature(geo_facet_id)
     }
 
-    /**
-     * Clicks a feature programatically.
-     */
-    this.click_feature = function(geo_facet_id) {
-        feature_layers["features"].click_feature(geo_facet_id)
+    this.remove_all_features = function() {
+        feature_layers["features"].remove_all_features()
     }
 
 
@@ -138,6 +135,11 @@ function OpenLayersView(config) {
             vector_layer.addFeatures([feature])
         }
 
+        this.select_feature = function(topic_id) {
+            // alert("Click feature programatically")
+            select_control.clickFeature(features[topic_id])
+        }
+
         this.remove_feature = function(topic_id) {
             vector_layer.removeFeatures([features[topic_id]])
             // ### TODO: delete from features object
@@ -147,14 +149,7 @@ function OpenLayersView(config) {
             vector_layer.removeAllFeatures()
         }
 
-        // ---
-
-        this.click_feature = function(topic_id) {
-            // alert("Click feature programatically")
-            select_control.clickFeature(features[topic_id])
-        }
-
-        // ---
+        // ===
 
         function do_select_feature(feature) {
             // alert("do_select_feature()")
