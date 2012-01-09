@@ -140,8 +140,10 @@ function OpenLayersView(config) {
         }
 
         this.select_feature = function(topic_id) {
-            // alert("Click feature programatically")
-            select_control.clickFeature(features[topic_id])
+            // alert("select_feature()")
+            var feature = features[topic_id]
+            select_control.clickFeature(feature)
+            scroll_to_center(feature)
         }
 
         this.remove_feature = function(topic_id) {
@@ -158,6 +160,13 @@ function OpenLayersView(config) {
         function do_select_feature(feature) {
             // alert("do_select_feature()")
             dm4c.do_select_topic(feature.attributes.topic_id)
+        }
+
+        function scroll_to_center(feature) {
+            var p = new OpenLayers.LonLat(feature.geometry.x, feature.geometry.y)
+            if (!map.getExtent().containsLonLat(p)) {
+                map.setCenter(p)
+            }
         }
     }
 }
