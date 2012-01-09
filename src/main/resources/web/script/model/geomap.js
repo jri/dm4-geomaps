@@ -90,7 +90,7 @@ function Geomap(topicmap_id, ol_view) {
                     // update model
                     this.add_topic(geo_facet.id, geo_facet.type_uri, "", geo_facet.x, geo_facet.y)
                     // update view
-                    ol_view.add_feature(geo_facet)
+                    ol_view.add_feature(geo_facet, true)    // do_select=true
                 }
             }
         }

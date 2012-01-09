@@ -3,9 +3,9 @@ function OpenLayersView(config) {
     // style preferences
     var default_style = {
         fillColor: "#ff00ff",
-        fillOpacity: 0.4,
+        fillOpacity: 0.5,
         strokeColor: "#000000",
-        strokeOpacity: 1,
+        strokeOpacity: 0.5,
         strokeWidth: 2,
         pointRadius: 8
     }
@@ -42,8 +42,8 @@ function OpenLayersView(config) {
 
     // === Features ===
 
-    this.add_feature = function(geo_facet) {
-        feature_layers["features"].add_feature({lon: geo_facet.x, lat: geo_facet.y}, geo_facet)
+    this.add_feature = function(geo_facet, do_select) {
+        feature_layers["features"].add_feature({lon: geo_facet.x, lat: geo_facet.y}, geo_facet, do_select)
     }
 
     this.select_feature = function(geo_facet_id) {
@@ -122,7 +122,7 @@ function OpenLayersView(config) {
 
         // === Public API ===
 
-        this.add_feature = function(pos, topic) {
+        this.add_feature = function(pos, topic, do_select) {
             // remove feature if already on the map
             if (features[topic.id]) {
                 vector_layer.removeFeatures([features[topic.id]])
@@ -133,6 +133,10 @@ function OpenLayersView(config) {
             var feature = new OpenLayers.Feature.Vector(geometry, {topic_id: topic.id})
             features[topic.id] = feature
             vector_layer.addFeatures([feature])
+            //
+            if (do_select) {
+                this.select_feature(topic.id)
+            }            
         }
 
         this.select_feature = function(topic_id) {

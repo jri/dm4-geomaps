@@ -37,7 +37,7 @@ function GeoMapRenderer() {
                     "at x=" + geo_facet.x + ", y=" + geo_facet.y + "\n..... Original address topic=" +
                     JSON.stringify(address))
                 // update view
-                add_feature(geo_facet)
+                ol_view.add_feature(geo_facet, do_select)
                 // setup replacement topic for selection model
                 select = geo_facet
             } else {
@@ -97,10 +97,6 @@ function GeoMapRenderer() {
     }
 
     // ----------------------------------------------------------------------------------------------- Private Functions
-
-    function add_feature(geo_facet) {
-        ol_view.add_feature(geo_facet)
-    }
 
     // === Event Handler ===
 
