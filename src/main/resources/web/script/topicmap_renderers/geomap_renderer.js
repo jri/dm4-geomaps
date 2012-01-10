@@ -90,6 +90,28 @@ function GeoMapRenderer() {
         return new Geomap(topicmap_id, ol_view)
     }
 
+    this.display_topicmap = function(topicmap, no_history_update) {
+        dm4c.canvas.clear()
+        ol_view.set_center(topicmap.center, topicmap.zoom)
+        display_topics()
+        restore_selection()
+
+        function display_topics() {
+            topicmap.iterate_topics(function(topic) {
+                ol_view.add_feature(topic)
+            })
+        }
+
+        function restore_selection() {
+            var id = topicmap.selected_object_id
+            if (id != -1) {
+                dm4c.do_select_topic(id, no_history_update)
+            } else {
+                dm4c.do_reset_selection(no_history_update)
+            }
+        }
+    }
+
     this.initial_topicmap_state = function() {
         var center = new OpenLayers.LonLat(11, 51)      // default state is "Germany"
         return {

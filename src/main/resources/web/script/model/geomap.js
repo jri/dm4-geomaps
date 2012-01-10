@@ -2,18 +2,18 @@
  * A topicmap model that is attached to the database.
  *
  * ### FIXME: introduce common base class for Geomap and Topicmap (see deepamehta-topicmaps module)
- * ### FIXME: remove "ol_view" constructor argument. A model must not depend on the view.
  */
-function Geomap(topicmap_id, ol_view) {
+function Geomap(topicmap_id) {
 
     var LOG_GEOMAPS = false
+    var self = this
 
     // Model
     var info                        // The underlying Topicmap topic (a Topic object)
     var topics = {}                 // topics of this topicmap (key: topic ID, value: GeomapTopic object)
-    var center                      // map center (an OpenLayers.LonLat object in lon/lat projection)
-    var zoom                        // zoom level (integer)
-    var selected_object_id = -1     // ID of the selected topic, or -1 for no selection
+    this.center                     // map center (an OpenLayers.LonLat object in lon/lat projection)
+    this.zoom                       // zoom level (integer)
+    this.selected_object_id = -1    // ID of the selected topic, or -1 for no selection
 
     load()
 
@@ -29,24 +29,9 @@ function Geomap(topicmap_id, ol_view) {
         return info.get("dm4.topicmaps.topicmap_renderer_uri")
     }
 
-    this.put_on_canvas = function(no_history_update) {
-        dm4c.canvas.clear()
-        ol_view.set_center(center, zoom)
-        display_topics()
-        restore_selection()
-
-        function display_topics() {
-            for (var id in topics) {
-                ol_view.add_feature(topics[id])
-            }
-        }
-
-        function restore_selection() {
-            if (selected_object_id != -1) {
-                dm4c.do_select_topic(selected_object_id, no_history_update)
-            } else {
-                dm4c.do_reset_selection(no_history_update)
-            }
+    this.iterate_topics = function(visitor_func) {
+        for (var id in topics) {
+            visitor_func(topics[id])
         }
     }
 
@@ -92,14 +77,14 @@ function Geomap(topicmap_id, ol_view) {
     }
 
     this.set_topic_selection = function(topic) {
-        selected_object_id = topic.id
+        this.selected_object_id = topic.id
     }
 
     this.set_association_selection = function(assoc) {
     }
 
     this.reset_selection = function() {
-        selected_object_id = -1
+        this.selected_object_id = -1
     }
 
     this.prepare_topic_for_display = function(topic) {
@@ -108,12 +93,12 @@ function Geomap(topicmap_id, ol_view) {
     // ===
 
     /**
-     * @param   _center     an OpenLayers.LonLat object in lon/lat projection
+     * @param   center      an OpenLayers.LonLat object in lon/lat projection
      */
-    this.set_state = function(_center, _zoom) {
+    this.set_state = function(center, zoom) {
         // update memory
-        center = _center
-        zoom = _zoom
+        this.center = center
+        this.zoom = zoom
         // update DB
         dm4c.restc.set_geomap_state(topicmap_id, center, zoom)
     }
@@ -139,8 +124,8 @@ function Geomap(topicmap_id, ol_view) {
             var trans = state.get("dm4.topicmaps.translation")
             var lon = trans.get("dm4.topicmaps.translation_x")
             var lat = trans.get("dm4.topicmaps.translation_y")
-            center = new OpenLayers.LonLat(lon, lat)
-            zoom = state.get("dm4.topicmaps.zoom_level")
+            self.center = new OpenLayers.LonLat(lon, lat)
+            self.zoom = state.get("dm4.topicmaps.zoom_level")
         }
     }
 
@@ -171,8 +156,8 @@ function Geomap(topicmap_id, ol_view) {
         // ---
 
         function reset_selection() {
-            if (selected_object_id == id) {
-                selected_object_id = -1
+            if (self.selected_object_id == id) {
+                self.selected_object_id = -1
             }
         }
     }
