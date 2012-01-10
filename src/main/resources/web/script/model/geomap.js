@@ -51,22 +51,17 @@ function Geomap(topicmap_id, ol_view) {
     }
 
     this.add_topic = function(id, type_uri, value, x, y) {
-        // Add the topic to this map if all applies:
-        // 1) The topic has coordinates
-        // 2) The topic is not already added to this map 
-        if (x != undefined && y != undefined) {
-            if (!topics[id]) {
-                if (LOG_GEOMAPS) dm4c.log("Geomap.add_topic(): adding topic to model of geomap " + topicmap_id +
-                    "\n..... id=" + id + ", type_uri=\"" + type_uri + "\", x=" + x + ", y=" + y)
-                // update DB
-                dm4c.restc.add_topic_to_geomap(topicmap_id, id)
-                // update memory
-                topics[id] = new GeomapTopic(id, type_uri, value, x, y)
-            }
-        } else {
-            if (LOG_GEOMAPS) dm4c.log("Geomap.add_topic(): adding topic to model of geomap " + topicmap_id +
-                " ABORTED -- topic has no coordinates\n..... id=" + id + ", type_uri=\"" + type_uri +
-                "\", value=\"" + value + "\"")
+        if (x == undefined || y == undefined) {
+            throw "GeomapError: no coordinates provided while calling add_topic (topic_id=" + id + ")"
+        }
+        //
+        if (!topics[id]) {
+            if (LOG_GEOMAPS) dm4c.log("Adding topic " + id + " (type_uri=\"" + type_uri + "\", x=" + x + ", y=" + y +
+                ") to geomap " + topicmap_id)
+            // update DB
+            dm4c.restc.add_topic_to_geomap(topicmap_id, id)
+            // update memory
+            topics[id] = new GeomapTopic(id, x, y)
         }
     }
 
@@ -74,25 +69,11 @@ function Geomap(topicmap_id, ol_view) {
     }
 
     this.update_topic = function(topic) {
-        // Add the topic's geo facet to this map if all applies:
-        // 1) This map is selected
-        // 2) The topic has an Address topic as child
-        // 3) The Address has a geo facet
-        // 4) The geo facet is not already added to this map 
-        if (GeoMapRenderer.get_geomap() == this) {
-            // ### Compare to GeoMapRenderer add_topic(). Can we call it from here?
-            // ### FIXME: or can we call dm4c.show_topic() here?
-            if (LOG_GEOMAPS) dm4c.log("Geomap.update_topic(): topic=" + JSON.stringify(topic))
-            var address = topic.find_child_topic("dm4.contacts.address")
-            if (address) {
-                var geo_facet = GeoMapRenderer.get_geo_facet(address)
-                if (geo_facet && !topics[geo_facet.id]) {
-                    // update model
-                    this.add_topic(geo_facet.id, geo_facet.type_uri, "", geo_facet.x, geo_facet.y)
-                    // update view
-                    ol_view.add_feature(geo_facet, true)    // do_select=true
-                }
-            }
+        var t = topics[topic.id]
+        if (t) {
+            if (LOG_GEOMAPS) dm4c.log("..... Updating topic " + t.id + " (x=" + t.x + ", y=" + t.y + ") on geomap " +
+                topicmap_id)
+            t.update(topic)
         }
     }
 
@@ -102,8 +83,7 @@ function Geomap(topicmap_id, ol_view) {
     this.delete_topic = function(id) {
         var topic = topics[id]
         if (topic) {
-            if (LOG_GEOMAPS) dm4c.log("..... Deleting topic " + id + " (\"" + topic.label + "\") from geomap " +
-                topicmap_id)
+            if (LOG_GEOMAPS) dm4c.log("..... Deleting topic " + id + " from geomap " + topicmap_id)
             topic.remove()
         }
     }
@@ -150,7 +130,7 @@ function Geomap(topicmap_id, ol_view) {
         function init_topics() {
             for (var i = 0, topic; topic = topicmap.topics[i]; i++) {
                 var pos = GeoMapRenderer.position(new Topic(topic))
-                topics[topic.id] = new GeomapTopic(topic.id, topic.type_uri, topic.value, pos.x, pos.y)
+                topics[topic.id] = new GeomapTopic(topic.id, pos.x, pos.y)
             }
         }
 
@@ -166,12 +146,22 @@ function Geomap(topicmap_id, ol_view) {
 
     // --- Private Classes ---
 
-    function GeomapTopic(id, type_uri, value, x, y) {
+    function GeomapTopic(id, x, y) {
+
         this.id = id
-        this.type_uri = type_uri
-        this.value = value
         this.x = x
         this.y = y
+
+        /**
+         * @param   topic   a Topic object of type dm4.geomaps.geo_coordinate
+         */
+        this.update = function(topic) {
+            // Note: for a geo topic an update request might result in a geometry change (in case the Address changes).
+            // (not so for non-geo topics).
+            var p = GeoMapRenderer.position(topic)
+            this.x = p.x
+            this.y = p.y
+        }
 
         this.remove = function() {
             delete topics[id]
