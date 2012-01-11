@@ -34,10 +34,21 @@ function geomaps_plugin() {
 
     // ------------------------------------------------------------------------------------------------------ Public API
 
-    this.get_geo_facet = function(geo_topic) {
-        var address = geo_topic.find_child_topic("dm4.contacts.address")
+    /**
+     * Returns the geo facet of the given topic.
+     *
+     * @return  A "Geo Coordinate" topic extended with "x" and "y" properties (a Topic object).
+     */
+    this.get_geo_facet = function(topic) {
+        var address = topic.find_child_topic("dm4.contacts.address")
         if (address) {
-            return address.get("dm4.geomaps.geo_coordinate")
+            var geo_facet = address.get("dm4.geomaps.geo_coordinate")
+            if (geo_facet) {
+                var pos = GeoMapRenderer.position(geo_facet)
+                geo_facet.x = pos.x
+                geo_facet.y = pos.y
+                return geo_facet
+            }
         }
     }
 }

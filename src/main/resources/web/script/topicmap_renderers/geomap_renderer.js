@@ -27,48 +27,28 @@ function GeoMapRenderer() {
     }
 
     this.add_topic = function(topic, do_select) {
-        var select = undefined
+        var topic_shown = undefined
         //
-        var address = topic.find_child_topic("dm4.contacts.address")
-        if (address) {
-            var geo_facet = get_geo_facet(address)
-            if (geo_facet) {
-                if (LOG_GEOMAPS) dm4c.log("GeoMapRenderer.add_topic(): setting up replacement topic " +
-                    "at x=" + geo_facet.x + ", y=" + geo_facet.y + "\n..... Original address topic=" +
-                    JSON.stringify(address))
-                // update view
-                ol_view.add_feature(geo_facet, do_select)
-                // setup replacement topic for selection model
-                select = geo_facet
-            } else {
-                if (LOG_GEOMAPS) dm4c.log("GeoMapRenderer.add_topic(): setting up replacement topic " +
-                    "ABORTED -- address has no geo facet\n..... Address topic=" + JSON.stringify(address))
-            }
-        } else {
-            if (LOG_GEOMAPS) dm4c.log("GeoMapRenderer.add_topic(): setting up replacement topic " +
-                "ABORTED -- topic has no address child\n..... Topic=" + JSON.stringify(topic))
+        var geo_facet = dm4c.get_plugin("geomaps_plugin").get_geo_facet(topic)
+        if (geo_facet) {
+            // update view
+            ol_view.add_feature(geo_facet, do_select)
+            //
+            topic_shown = geo_facet
         }
         //
-        return {select: select, display: topic}
+        return topic_shown
     }
 
     this.update_topic = function(topic, refresh_canvas) {
-        // Add the topic's geo facet to the geomap if all applies:
-        // 1) The topic has an Address
-        // 2) The Address has a geo facet
-        // 3) The geo facet is not already added to this map 
         // ### Compare to add_topic() above. Can we call it from here?
         // ### FIXME: or can we call dm4c.show_topic() here?
-        if (LOG_GEOMAPS) dm4c.log("GeoMapRenderer.update_topic(): topic=" + JSON.stringify(topic))
-        var address = topic.find_child_topic("dm4.contacts.address")
-        if (address) {
-            var geo_facet = get_geo_facet(address)
-            if (geo_facet) {
-                // update model
-                get_geomap().add_topic(geo_facet.id, geo_facet.type_uri, "", geo_facet.x, geo_facet.y)
-                // update view
-                ol_view.add_feature(geo_facet, true)    // do_select=true
-            }
+        var geo_facet = dm4c.get_plugin("geomaps_plugin").get_geo_facet(topic)
+        if (geo_facet) {
+            // update model
+            get_geomap().add_topic(geo_facet.id, geo_facet.type_uri, "", geo_facet.x, geo_facet.y)
+            // update view
+            ol_view.add_feature(geo_facet, true)    // do_select=true
         }
     }
 
@@ -142,23 +122,6 @@ function GeoMapRenderer() {
 
     function get_geomap() {
         return dm4c.get_plugin("topicmaps_plugin").get_topicmap()
-    }
-
-    /**
-     * Returns the geo facet of an address.
-     *
-     * @param   address     An "Address" topic (a JavaScript object).
-     *
-     * @return  A "Geo Coordinate" topic extended with "x" and "y" properties (a Topic object).
-     */
-    function get_geo_facet(address) {
-        var geo_facet = address.get("dm4.geomaps.geo_coordinate")
-        if (geo_facet) {
-            var pos = GeoMapRenderer.position(geo_facet)
-            geo_facet.x = pos.x
-            geo_facet.y = pos.y
-            return geo_facet
-        }
     }
 
     // === Event Handler ===
