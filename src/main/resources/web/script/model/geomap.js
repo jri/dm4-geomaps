@@ -25,6 +25,10 @@ function Geomap(topicmap_id) {
         return topicmap_id
     }
 
+    this.get_name = function() {
+        return info.get("dm4.topicmaps.name")
+    }
+
     this.get_renderer_uri = function() {
         return info.get("dm4.topicmaps.canvas_renderer_uri")
     }
