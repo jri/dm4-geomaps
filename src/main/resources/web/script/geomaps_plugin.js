@@ -26,9 +26,9 @@ function geomaps_plugin() {
             "/zoom/" + zoom)
     }
 
-    // === Topicmaps Handler ===
+    // === Topicmaps Listeners ===
 
-    dm4c.register_plugin_handler("canvas_renderer", function() {
+    dm4c.register_listener("canvas_renderer", function() {
         return new GeomapRenderer()
     })
 
