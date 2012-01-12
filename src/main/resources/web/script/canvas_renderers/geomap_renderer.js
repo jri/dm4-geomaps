@@ -1,13 +1,13 @@
 /**
- * A topicmap renderer that displays a geo map in the background. The rendering is based on OpenLayers library.
+ * A canvas renderer that displays a geo map in the background. The rendering is based on OpenLayers library.
  *
  * OpenLayers specifics are encapsulated. The caller must not know about OpenLayers API usage.
  */
-function GeoMapRenderer() {
+function GeomapRenderer() {
 
     // ------------------------------------------------------------------------------------------------ Constructor Code
 
-    js.extend(this, TopicmapRenderer)
+    js.extend(this, CanvasRenderer)
 
     this.dom = $("<div>", {id: "canvas"})
 
@@ -17,7 +17,7 @@ function GeoMapRenderer() {
 
     // ------------------------------------------------------------------------------------------------------ Public API
 
-    // === TopicmapRenderer Implementation ===
+    // === CanvasRenderer Implementation ===
 
     this.get_info = function() {
         return {
@@ -64,7 +64,7 @@ function GeoMapRenderer() {
         }
     }
 
-    // === TopicmapRenderer Topicmaps Extension ===
+    // === CanvasRenderer Topicmaps Extension ===
 
     this.load_topicmap = function(topicmap_id) {
         return new Geomap(topicmap_id, ol_view)
@@ -135,7 +135,7 @@ function GeoMapRenderer() {
 
 // ### FIXME: revise the Geomap model class and make this local functions
 
-GeoMapRenderer.position = function(geo_facet) {
+GeomapRenderer.position = function(geo_facet) {
     return {
         x: geo_facet.get("dm4.geomaps.longitude"),
         y: geo_facet.get("dm4.geomaps.latitude")

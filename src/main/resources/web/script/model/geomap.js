@@ -26,7 +26,7 @@ function Geomap(topicmap_id) {
     }
 
     this.get_renderer_uri = function() {
-        return info.get("dm4.topicmaps.topicmap_renderer_uri")
+        return info.get("dm4.topicmaps.canvas_renderer_uri")
     }
 
     this.iterate_topics = function(visitor_func) {
@@ -114,7 +114,7 @@ function Geomap(topicmap_id) {
 
         function init_topics() {
             for (var i = 0, topic; topic = topicmap.topics[i]; i++) {
-                var pos = GeoMapRenderer.position(new Topic(topic))
+                var pos = GeomapRenderer.position(new Topic(topic))
                 topics[topic.id] = new GeomapTopic(topic.id, pos.x, pos.y)
             }
         }
@@ -143,7 +143,7 @@ function Geomap(topicmap_id) {
         this.update = function(topic) {
             // Note: for a geo topic an update request might result in a geometry change (in case the Address changes).
             // (not so for non-geo topics).
-            var p = GeoMapRenderer.position(topic)
+            var p = GeomapRenderer.position(topic)
             this.x = p.x
             this.y = p.y
         }

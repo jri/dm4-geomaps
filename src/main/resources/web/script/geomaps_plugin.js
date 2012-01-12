@@ -2,7 +2,7 @@ function geomaps_plugin() {
 
     dm4c.register_css_stylesheet("/de.deepamehta.geomaps/script/vendor/openlayers/theme/default/style.css")
 
-    dm4c.javascript_source("/de.deepamehta.geomaps/script/topicmap_renderers/geomap_renderer.js")
+    dm4c.javascript_source("/de.deepamehta.geomaps/script/canvas_renderers/geomap_renderer.js")
     dm4c.javascript_source("/de.deepamehta.geomaps/script/model/geomap.js")
     dm4c.javascript_source("/de.deepamehta.geomaps/script/view/openlayers_view.js")
     dm4c.javascript_source("/de.deepamehta.geomaps/script/vendor/openlayers/OpenLayers.js")
@@ -28,8 +28,8 @@ function geomaps_plugin() {
 
     // === Topicmaps Handler ===
 
-    dm4c.register_plugin_handler("topicmap_renderer", function() {
-        return new GeoMapRenderer()
+    dm4c.register_plugin_handler("canvas_renderer", function() {
+        return new GeomapRenderer()
     })
 
     // ------------------------------------------------------------------------------------------------------ Public API
@@ -44,7 +44,7 @@ function geomaps_plugin() {
         if (address) {
             var geo_facet = address.get("dm4.geomaps.geo_coordinate")
             if (geo_facet) {
-                var pos = GeoMapRenderer.position(geo_facet)
+                var pos = GeomapRenderer.position(geo_facet)
                 geo_facet.x = pos.x
                 geo_facet.y = pos.y
                 return geo_facet
