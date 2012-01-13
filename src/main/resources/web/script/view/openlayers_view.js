@@ -113,10 +113,15 @@ function OpenLayersView(config) {
             select: select_style
         })
         // create vector layer
-        var vector_layer = new OpenLayers.Layer.Vector(layer_name, {styleMap: style_map})
+        var vector_layer = new OpenLayers.Layer.Vector(layer_name, {
+            styleMap: style_map
+        })
         map.addLayer(vector_layer)
         // add SelectFeature control
-        var select_control = new OpenLayers.Control.SelectFeature(vector_layer, {onSelect: do_select_feature})
+        var select_control = new OpenLayers.Control.SelectFeature(vector_layer, {
+            onSelect: do_select_feature,
+            clickout: false
+        })
         map.addControl(select_control)
         select_control.activate()
 
