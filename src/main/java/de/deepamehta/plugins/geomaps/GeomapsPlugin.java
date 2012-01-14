@@ -200,16 +200,15 @@ public class GeomapsPlugin extends Plugin implements GeomapsService {
     /**
      * Stores a geo facet for an address topic in the DB.
      */
-    private void storeGeoFacet(Topic addressTopic, LonLat geoCoordinate, ClientState clientState,
-                                                                         Directives directives) {
+    private void storeGeoFacet(Topic address, LonLat geoCoordinate, ClientState clientState, Directives directives) {
         try {
-            logger.info("Storing geo facet (" + geoCoordinate + ") of address " + addressTopic);
+            logger.info("Storing geo facet (" + geoCoordinate + ") of address " + address);
             TopicModel geoFacet = new TopicModel("dm4.geomaps.geo_coordinate", new CompositeValue()
                 .put("dm4.geomaps.longitude", geoCoordinate.lon)
                 .put("dm4.geomaps.latitude",  geoCoordinate.lat));
-            facetsService.setFacet(addressTopic, "dm4.geomaps.geo_coordinate_facet", geoFacet, clientState, directives);
+            facetsService.updateFacet(address, "dm4.geomaps.geo_coordinate_facet", geoFacet, clientState, directives);
         } catch (Exception e) {
-            throw new RuntimeException("Storing geo facet of address " + addressTopic.getId() + " failed", e);
+            throw new RuntimeException("Storing geo facet of address " + address.getId() + " failed", e);
         }
     }
 
