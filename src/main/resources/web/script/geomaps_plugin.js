@@ -1,11 +1,11 @@
 function geomaps_plugin() {
 
-    dm4c.register_css_stylesheet("/de.deepamehta.geomaps/script/vendor/openlayers/theme/default/style.css")
+    dm4c.load_stylesheet("/de.deepamehta.geomaps/script/vendor/openlayers/theme/default/style.css")
 
-    dm4c.javascript_source("/de.deepamehta.geomaps/script/canvas_renderers/geomap_renderer.js")
-    dm4c.javascript_source("/de.deepamehta.geomaps/script/model/geomap.js")
-    dm4c.javascript_source("/de.deepamehta.geomaps/script/view/openlayers_view.js")
-    dm4c.javascript_source("/de.deepamehta.geomaps/script/vendor/openlayers/OpenLayers.js")
+    dm4c.load_script("/de.deepamehta.geomaps/script/canvas_renderers/geomap_renderer.js")
+    dm4c.load_script("/de.deepamehta.geomaps/script/model/geomap.js")
+    dm4c.load_script("/de.deepamehta.geomaps/script/view/openlayers_view.js")
+    dm4c.load_script("/de.deepamehta.geomaps/script/vendor/openlayers/OpenLayers.js")
 
     // === REST Client Extension ===
 
