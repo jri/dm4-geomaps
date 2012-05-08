@@ -10,7 +10,6 @@ import de.deepamehta.core.service.DeepaMehtaService;
 import de.deepamehta.core.util.JSONHelper;
 
 import org.codehaus.jettison.json.JSONArray;
-import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
 import java.awt.Point;
@@ -82,7 +81,7 @@ public class Geomap implements JSONEnabled {
             topicmap.put("info", geomapTopic.toJSON());
             topicmap.put("topics", JSONHelper.objectsToJSON(topics.values()));
             return topicmap;
-        } catch (JSONException e) {
+        } catch (Exception e) {
             throw new RuntimeException("Serialization failed (" + this + ")", e);
         }
     }

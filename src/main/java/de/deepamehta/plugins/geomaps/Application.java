@@ -1,7 +1,6 @@
 package de.deepamehta.plugins.geomaps;
 
 import de.deepamehta.plugins.webservice.provider.JSONEnabledProvider;
-// import de.deepamehta.plugins.topicmaps.provider.RefIdProvider;
 
 import de.deepamehta.core.osgi.Activator;
 
@@ -16,7 +15,6 @@ public class Application extends javax.ws.rs.core.Application {
     public Set<Class<?>> getClasses() {
         Set classes = new HashSet();
         classes.add(JSONEnabledProvider.class);
-        // classes.add(RefIdProvider.class);
         return classes;
     }
 
