@@ -8,10 +8,10 @@ A DeepaMehta 4 module for displaying geo-related topics on geographical maps.
 Requirements
 ------------
 
-* A DeepaMehta 4.0.7 installation  
+* A DeepaMehta 4.0.11 installation  
   <https://github.com/jri/deepamehta>
 
-* Plugin DM4 Facets 0.2  
+* Plugin DM4 Facets 0.3  
   <https://github.com/jri/dm4-facets>
 
 
@@ -21,9 +21,9 @@ Installation
 1. Install the DM4 Facets plugin. See link above.
 
 2. Download the DM4 Geomaps plugin:  
-   <http://www.deepamehta.de/maven2/de/deepamehta/deepamehta-geomaps/0.2/deepamehta-geomaps-0.2.jar>
+   <http://deepamehta.newthinking.net/maven2/de/deepamehta/deepamehta-geomaps/0.3/deepamehta-geomaps-0.3.jar>
 
-3. Move the DM4 Geomaps plugin to the `deepamehta-4.0.7/bundle` folder.
+3. Move the DM4 Geomaps plugin to the `deepamehta-4.0.11/bundle` folder.
 
 4. Restart DeepaMehta.
 
@@ -55,6 +55,10 @@ Note: geomaps are working also for your self-defined domain types. Just add the 
 Version History
 ---------------
 
+**0.3** -- May 19, 2012
+
+* Compatible with DeepaMehta 4.0.11
+
 **0.2** -- Jan 19, 2011
 
 * SVG overlay for feature rendering (OpenLayers vector layer replaces marker layer).
@@ -74,4 +78,4 @@ Version History
 
 ------------
 Jörg Richter  
-Jan 19, 2011
+May 19, 2012
