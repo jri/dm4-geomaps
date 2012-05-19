@@ -117,7 +117,7 @@ function OpenLayersView(config) {
             styleMap: style_map
         })
         map.addLayer(vector_layer)
-        bind_select_hanler()
+        bind_select_handler()
         // add SelectFeature control
         var select_control = new OpenLayers.Control.SelectFeature(vector_layer, {
             clickout: false
@@ -147,11 +147,11 @@ function OpenLayersView(config) {
         this.select_feature = function(topic_id) {
             var feature = features[topic_id]
             if (feature) {
-                unbind_select_hanler()
+                unbind_select_handler()
                 //
                 select_control.clickFeature(feature)
                 //
-                bind_select_hanler()
+                bind_select_handler()
                 scroll_to_center(feature)
             } else {
                 // ### alert("FeatureLayer: there is no feature for topic " + topic_id)
@@ -169,11 +169,11 @@ function OpenLayersView(config) {
 
         // ===
 
-        function bind_select_hanler() {
+        function bind_select_handler() {
             vector_layer.events.on({"featureselected": do_select_feature})
         }
 
-        function unbind_select_hanler() {
+        function unbind_select_handler() {
             vector_layer.events.un({"featureselected": do_select_feature})
         }
 
