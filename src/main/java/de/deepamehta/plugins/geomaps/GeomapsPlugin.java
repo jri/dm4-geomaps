@@ -5,9 +5,11 @@ import de.deepamehta.plugins.geomaps.service.GeomapsService;
 import de.deepamehta.plugins.facets.service.FacetsService;
 
 import de.deepamehta.core.Association;
+import de.deepamehta.core.AssociationDefinition;
 import de.deepamehta.core.RelatedTopic;
 import de.deepamehta.core.ResultSet;
 import de.deepamehta.core.Topic;
+import de.deepamehta.core.TopicType;
 import de.deepamehta.core.model.AssociationModel;
 import de.deepamehta.core.model.CompositeValue;
 import de.deepamehta.core.model.TopicModel;
@@ -33,6 +35,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.WebApplicationException;
 
 import java.net.URL;
+import java.util.List;
 import java.util.logging.Logger;
 
 
@@ -143,28 +146,11 @@ public class GeomapsPlugin extends Plugin implements GeomapsService {
 
     // ---
 
-    /**
-     * Enriches an Address topic with its Geo Coordinate facet.
-     */
-    @Override
-    public void postFetchTopicHook(Topic topic, ClientState clientState, Directives directives) {
-        if (topic.getTypeUri().equals("dm4.contacts.address")) {
-            Topic geoFacet = facetsService.getFacet(topic, "dm4.geomaps.geo_coordinate_facet");
-            if (geoFacet != null) {
-                logger.info("### Enriching address " + topic.getId() + " with its geo facet");
-                topic.getCompositeValue().put("dm4.geomaps.geo_coordinate", geoFacet.getModel());
-            } else {
-                logger.info("### Enriching address " + topic.getId() + " with its geo facet ABORTED " +
-                    "-- no geo facet in DB");
-            }
-        }
-    }
-
     @Override
     public void postCreateHook(Topic topic, ClientState clientState, Directives directives) {
         if (topic.getTypeUri().equals("dm4.contacts.address")) {
             //
-            facetsService.associateWithFacetType(topic.getId(), "dm4.geomaps.geo_coordinate_facet");
+            facetsService.addFacetTypeToTopic(topic.getId(), "dm4.geomaps.geo_coordinate_facet");
             //
             Address address = new Address(topic.getCompositeValue());
             if (!address.isEmpty()) {
@@ -193,6 +179,28 @@ public class GeomapsPlugin extends Plugin implements GeomapsService {
         }
     }
 
+    // ---
+
+    /**
+     * Enriches an Address topic with its Geo Coordinate facet.
+     */
+    @Override
+    public void preSendTopicHook(Topic topic, ClientState clientState) {
+        TopicModel address = findAddress(topic);
+        if (address == null) {
+            return;
+        }
+        //
+        Topic geoFacet = facetsService.getFacet(address.getId(), "dm4.geomaps.geo_coordinate_facet");
+        if (geoFacet != null) {
+            logger.info("### Enriching address " + address.getId() + " with its geo facet");
+            address.getCompositeValue().put("dm4.geomaps.geo_coordinate", geoFacet.getModel());
+        } else {
+            logger.info("### Enriching address " + address.getId() + " with its geo facet ABORTED " +
+                "-- no geo facet in DB");
+        }
+    }
+
 
 
     // ------------------------------------------------------------------------------------------------- Private Methods
@@ -205,11 +213,62 @@ public class GeomapsPlugin extends Plugin implements GeomapsService {
             logger.info("Storing geo facet (" + geoCoordinate + ") of address " + address);
             TopicModel geoFacet = new TopicModel("dm4.geomaps.geo_coordinate", new CompositeValue()
                 .put("dm4.geomaps.longitude", geoCoordinate.lon)
-                .put("dm4.geomaps.latitude",  geoCoordinate.lat));
+                .put("dm4.geomaps.latitude",  geoCoordinate.lat)
+            );
             facetsService.updateFacet(address, "dm4.geomaps.geo_coordinate_facet", geoFacet, clientState, directives);
         } catch (Exception e) {
             throw new RuntimeException("Storing geo facet of address " + address.getId() + " failed", e);
         }
+    }
+
+    // ---
+
+    private TopicModel findAddress(Topic topic) {
+        return findChildTopic(topic.getModel(), "dm4.contacts.address");
+    }
+
+    /**
+     * Searches a topic's composite value for a topic of a given type.
+     * The search is driven by the topic's type definition. In other words, composite value entries which do not
+     * adhere to the topic's type definition are not found.
+     * Note: this is an in-memory search; the DB is not accessed.
+     * <p>
+     * The first topic found is returned, according to a depth-first search.
+     * For multiple-value fields only the first topic is returned.
+     * <p>
+     * TODO: make this a generally available method by adding it to the Topic interface?
+     */
+    private TopicModel findChildTopic(TopicModel topic, String topicTypeUri) {
+        String typeUri = topic.getTypeUri();
+        if (typeUri.equals(topicTypeUri)) {
+            return topic;
+        }
+        CompositeValue comp = topic.getCompositeValue();
+        TopicType topicType = dms.getTopicType(typeUri, null);      // clientState=null
+        for (AssociationDefinition assocDef : topicType.getAssocDefs().values()) {
+            String childTypeUri   = assocDef.getPartTopicTypeUri();
+            String cardinalityUri = assocDef.getPartCardinalityUri();
+            TopicModel childTopic = null;
+            if (cardinalityUri.equals("dm4.core.one")) {
+                childTopic = comp.getTopic(childTypeUri, null);
+            } else if (cardinalityUri.equals("dm4.core.many")) {
+                List<TopicModel> childTopics = comp.getTopics(childTypeUri, null);
+                if (childTopics != null) {
+                    childTopic = childTopics.get(0);     // ### FIXME: must check empty?
+                }
+            } else {
+                throw new RuntimeException("\"" + cardinalityUri + "\" is an unexpected cardinality URI");
+            }
+            // Note: topics just created have no child topics yet
+            if (childTopic == null) {
+                continue;
+            }
+            childTopic = findChildTopic(childTopic, topicTypeUri);
+            if (childTopic != null) {
+                return childTopic;
+            }
+        }
+        return null;
     }
 
     // ------------------------------------------------------------------------------------------------- Private Classes
