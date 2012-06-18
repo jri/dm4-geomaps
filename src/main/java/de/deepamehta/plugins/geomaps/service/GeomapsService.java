@@ -13,11 +13,11 @@ public interface GeomapsService extends PluginService {
 
     Geomap getGeomap(long geomapId);
 
+    Topic getGeoTopic(long topicId, ClientState clientState);
+
     ResultSet<RelatedTopic> getGeomapTopics(long geomapId);
 
     void addTopicToGeomap(long geomapId, long topicId);
-
-    Topic getGeoTopic(long topicId, ClientState clientState);
 
     void setGeomapState(long geomapId, double lon, double lat, int zoom);
 }

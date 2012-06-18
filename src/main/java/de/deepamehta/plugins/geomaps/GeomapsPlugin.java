@@ -17,6 +17,7 @@ import de.deepamehta.core.model.TopicRoleModel;
 import de.deepamehta.core.service.ClientState;
 import de.deepamehta.core.service.Directive;
 import de.deepamehta.core.service.Directives;
+import de.deepamehta.core.service.Hook;
 import de.deepamehta.core.service.Plugin;
 import de.deepamehta.core.service.PluginService;
 import de.deepamehta.core.util.JavaUtils;
@@ -72,6 +73,27 @@ public class GeomapsPlugin extends Plugin implements GeomapsService {
     }
 
     @GET
+    @Path("/topic/{id}")
+    @Override
+    public Topic getGeoTopic(@PathParam("id") long topicId, @HeaderParam("Cookie") ClientState clientState) {
+        try {
+            Topic topic = dms.getTopic(topicId, true, clientState);
+            RelatedTopic parentTopic;
+            while ((parentTopic = topic.getRelatedTopic(null, "dm4.core.part", "dm4.core.whole", null,
+                    true, false, clientState)) != null) {
+                topic = parentTopic;
+            }
+            // ### TODO: triggering PRE_SEND should not be up to the plugin developer.
+            // ### Possibly a JAX-RS 2.0 entity interceptor could be used instead.
+            dms.triggerHook(Hook.PRE_SEND_TOPIC, topic, clientState);
+            return topic;
+        } catch (Exception e) {
+            throw new WebApplicationException(new RuntimeException("Finding the geo coordinate's parent topic failed " +
+                "(topicId=" + topicId + ")", e));
+        }
+    }
+
+    @GET
     @Path("/{id}/topics")
     @Override
     public ResultSet<RelatedTopic> getGeomapTopics(@PathParam("id") long geomapId) {
@@ -85,26 +107,10 @@ public class GeomapsPlugin extends Plugin implements GeomapsService {
         logger.info("### Adding topic " + topicId + " to geomap " + geomapId);
         AssociationModel model = new AssociationModel("dm4.geomaps.geotopic_mapcontext",
             new TopicRoleModel(geomapId, "dm4.core.default"),
-            new TopicRoleModel(topicId,  "dm4.topicmaps.topicmap_topic"));
+            new TopicRoleModel(topicId,  "dm4.topicmaps.topicmap_topic")
+        );
         Association refAssoc = dms.createAssociation(model, null);     // FIXME: clientState=null
         // ### return refAssoc.getId();
-    }
-
-    @GET
-    @Path("/topic/{id}")
-    @Override
-    public Topic getGeoTopic(@PathParam("id") long topicId, @HeaderParam("Cookie") ClientState clientState) {
-        try {
-            Topic topic = dms.getTopic(topicId, true, clientState);
-            RelatedTopic parentTopic;
-            while ((parentTopic = topic.getRelatedTopic(null, "dm4.core.part", "dm4.core.whole", null,
-                    true, false, clientState)) != null) {
-                topic = parentTopic;
-            }
-            return topic;
-        } catch (Exception e) {
-            throw new RuntimeException("Finding the geo coordinate's parent topic failed (topicId=" + topicId + ")", e);
-        }
     }
 
     @PUT
