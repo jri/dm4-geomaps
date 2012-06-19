@@ -71,8 +71,8 @@ function GeomapRenderer() {
 
     // === CanvasRenderer Topicmaps Extension ===
 
-    this.load_topicmap = function(topicmap_id) {
-        return new Geomap(topicmap_id, ol_view)
+    this.load_topicmap = function(topicmap_id, config) {
+        return new Geomap(topicmap_id, config)
     }
 
     this.display_topicmap = function(topicmap, no_history_update) {

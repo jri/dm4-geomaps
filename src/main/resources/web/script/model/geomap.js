@@ -1,9 +1,11 @@
 /**
- * A topicmap model that is attached to the database.
+ * A geomap model that is attached to the database. There are methods for:
+ *  - loading a geomap from DB
+ *  - manipulating the geomap by e.g. adding/removing topics
  *
- * ### FIXME: introduce common base class for Geomap and Topicmap (see deepamehta-topicmaps module)
+ * ### TODO: introduce common base class for Geomap and Topicmap (see deepamehta-topicmaps module)
  */
-function Geomap(topicmap_id) {
+function Geomap(topicmap_id, config) {
 
     var LOG_GEOMAPS = false
     var self = this
@@ -17,7 +19,9 @@ function Geomap(topicmap_id) {
 
     load()
 
-    // --- Public API ---
+
+
+    // ------------------------------------------------------------------------------------------------------ Public API
 
     // === Topicmap Implementation ===
 
@@ -48,7 +52,9 @@ function Geomap(topicmap_id) {
             if (LOG_GEOMAPS) dm4c.log("Adding topic " + id + " (type_uri=\"" + type_uri + "\", x=" + x + ", y=" + y +
                 ") to geomap " + topicmap_id)
             // update DB
-            dm4c.restc.add_topic_to_geomap(topicmap_id, id)
+            if (is_writable()) {
+                dm4c.restc.add_topic_to_geomap(topicmap_id, id)
+            }
             // update memory
             topics[id] = new GeomapTopic(id, x, y)
         }
@@ -104,10 +110,14 @@ function Geomap(topicmap_id) {
         this.center = center
         this.zoom = zoom
         // update DB
-        dm4c.restc.set_geomap_state(topicmap_id, center, zoom)
+        if (is_writable()) {
+            dm4c.restc.set_geomap_state(topicmap_id, center, zoom)
+        }
     }
 
-    // --- Private Functions ---
+
+
+    // ----------------------------------------------------------------------------------------------- Private Functions
 
     function load() {
         var topicmap = dm4c.restc.get_geomap(topicmap_id)
@@ -133,7 +143,15 @@ function Geomap(topicmap_id) {
         }
     }
 
-    // --- Private Classes ---
+    // ---
+
+    function is_writable() {
+        return config.is_writable()
+    }
+
+
+
+    // ------------------------------------------------------------------------------------------------- Private Classes
 
     function GeomapTopic(id, x, y) {
 
