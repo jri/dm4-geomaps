@@ -1,8 +1,8 @@
-function geomaps_plugin() {
+dm4c.add_plugin("de.deepamehta.geomaps", function() {
 
     dm4c.load_stylesheet("/de.deepamehta.geomaps/script/vendor/openlayers/theme/default/style.css")
 
-    dm4c.load_script("/de.deepamehta.geomaps/script/canvas_renderers/geomap_renderer.js")
+    dm4c.load_script("/de.deepamehta.geomaps/script/topicmap_renderers/geomap_renderer.js")
     dm4c.load_script("/de.deepamehta.geomaps/script/model/geomap.js")
     dm4c.load_script("/de.deepamehta.geomaps/script/view/openlayers_view.js")
     dm4c.load_script("/de.deepamehta.geomaps/script/vendor/openlayers/OpenLayers.js")
@@ -28,7 +28,7 @@ function geomaps_plugin() {
 
     // === Topicmaps Listeners ===
 
-    dm4c.register_listener("canvas_renderer", function() {
+    dm4c.add_listener("topicmap_renderer", function() {
         return new GeomapRenderer()
     })
 
@@ -51,4 +51,4 @@ function geomaps_plugin() {
             }
         }
     }
-}
+})

@@ -7,7 +7,7 @@ import de.deepamehta.core.RelatedTopic;
 import de.deepamehta.core.ResultSet;
 import de.deepamehta.core.Topic;
 import de.deepamehta.core.service.DeepaMehtaService;
-import de.deepamehta.core.util.JSONHelper;
+import de.deepamehta.core.util.DeepaMehtaUtils;
 
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
@@ -79,7 +79,7 @@ public class Geomap implements JSONEnabled {
         try {
             JSONObject topicmap = new JSONObject();
             topicmap.put("info", geomapTopic.toJSON());
-            topicmap.put("topics", JSONHelper.objectsToJSON(topics.values()));
+            topicmap.put("topics", DeepaMehtaUtils.objectsToJSON(topics.values()));
             return topicmap;
         } catch (Exception e) {
             throw new RuntimeException("Serialization failed (" + this + ")", e);

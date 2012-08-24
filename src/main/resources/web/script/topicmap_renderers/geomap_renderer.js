@@ -1,5 +1,5 @@
 /**
- * A canvas renderer that displays a geo map in the background. The rendering is based on OpenLayers library.
+ * A topicmap renderer that displays a geo map in the background. The rendering is based on OpenLayers library.
  *
  * OpenLayers specifics are encapsulated. The caller must not know about OpenLayers API usage.
  */
@@ -7,7 +7,7 @@ function GeomapRenderer() {
 
     // ------------------------------------------------------------------------------------------------ Constructor Code
 
-    js.extend(this, CanvasRenderer)
+    js.extend(this, TopicmapRenderer)
 
     this.dom = $("<div>", {id: "canvas"})
 
@@ -17,7 +17,7 @@ function GeomapRenderer() {
 
     // ------------------------------------------------------------------------------------------------------ Public API
 
-    // === CanvasRenderer Implementation ===
+    // === TopicmapRenderer Implementation ===
 
     this.get_info = function() {
         return {
@@ -29,7 +29,7 @@ function GeomapRenderer() {
     this.add_topic = function(topic, do_select) {
         var topic_shown = undefined
         //
-        var geo_facet = dm4c.get_plugin("geomaps_plugin").get_geo_facet(topic)
+        var geo_facet = dm4c.get_plugin("de.deepamehta.geomaps").get_geo_facet(topic)
         if (geo_facet) {
             // update view
             ol_view.add_feature(geo_facet, do_select)
@@ -43,7 +43,7 @@ function GeomapRenderer() {
     this.update_topic = function(topic, refresh_canvas) {
         // ### Compare to add_topic() above. Can we call it from here?
         // ### FIXME: or can we call dm4c.show_topic() here?
-        var geo_facet = dm4c.get_plugin("geomaps_plugin").get_geo_facet(topic)
+        var geo_facet = dm4c.get_plugin("de.deepamehta.geomaps").get_geo_facet(topic)
         if (geo_facet) {
             // update model
             get_geomap().add_topic(geo_facet.id, geo_facet.type_uri, "", geo_facet.x, geo_facet.y)
@@ -69,7 +69,7 @@ function GeomapRenderer() {
         }
     }
 
-    // === CanvasRenderer Topicmaps Extension ===
+    // === TopicmapRenderer Topicmaps Extension ===
 
     this.load_topicmap = function(topicmap_id, config) {
         return new Geomap(topicmap_id, config)
@@ -126,7 +126,7 @@ function GeomapRenderer() {
     // ----------------------------------------------------------------------------------------------- Private Functions
 
     function get_geomap() {
-        return dm4c.get_plugin("topicmaps_plugin").get_topicmap()
+        return dm4c.get_plugin("de.deepamehta.topicmaps").get_topicmap()
     }
 
     // === Event Handler ===

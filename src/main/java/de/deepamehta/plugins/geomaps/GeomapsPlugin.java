@@ -14,12 +14,18 @@ import de.deepamehta.core.model.AssociationModel;
 import de.deepamehta.core.model.CompositeValue;
 import de.deepamehta.core.model.TopicModel;
 import de.deepamehta.core.model.TopicRoleModel;
+import de.deepamehta.core.osgi.PluginActivator;
 import de.deepamehta.core.service.ClientState;
+import de.deepamehta.core.service.CoreEvent;
 import de.deepamehta.core.service.Directive;
 import de.deepamehta.core.service.Directives;
-import de.deepamehta.core.service.Hook;
 import de.deepamehta.core.service.Plugin;
 import de.deepamehta.core.service.PluginService;
+import de.deepamehta.core.service.listener.PluginServiceArrivedListener;
+import de.deepamehta.core.service.listener.PluginServiceGoneListener;
+import de.deepamehta.core.service.listener.PostCreateTopicListener;
+import de.deepamehta.core.service.listener.PostUpdateTopicListener;
+import de.deepamehta.core.service.listener.PreSendTopicListener;
 import de.deepamehta.core.util.JavaUtils;
 
 import org.codehaus.jettison.json.JSONObject;
@@ -41,10 +47,14 @@ import java.util.logging.Logger;
 
 
 
-@Path("/")
+@Path("/geomap")
 @Consumes("application/json")
 @Produces("application/json")
-public class GeomapsPlugin extends Plugin implements GeomapsService {
+public class GeomapsPlugin extends PluginActivator implements GeomapsService, PluginServiceArrivedListener,
+                                                                              PluginServiceGoneListener,
+                                                                              PostCreateTopicListener,
+                                                                              PostUpdateTopicListener,
+                                                                              PreSendTopicListener {
 
     private static final String GEOCODER_URL = "http://maps.googleapis.com/maps/api/geocode/json?" +
         "address=%s&sensor=false";
@@ -83,9 +93,9 @@ public class GeomapsPlugin extends Plugin implements GeomapsService {
                     true, false, clientState)) != null) {
                 topic = parentTopic;
             }
-            // ### TODO: triggering PRE_SEND should not be up to the plugin developer.
+            // ### TODO: firing PRE_SEND should not be up to the plugin developer.
             // ### Possibly a JAX-RS 2.0 entity interceptor could be used instead.
-            dms.triggerHook(Hook.PRE_SEND_TOPIC, topic, clientState);
+            dms.fireEvent(CoreEvent.PRE_SEND_TOPIC, topic, clientState);
             return topic;
         } catch (Exception e) {
             throw new WebApplicationException(new RuntimeException("Finding the geo coordinate's parent topic failed " +
@@ -128,14 +138,14 @@ public class GeomapsPlugin extends Plugin implements GeomapsService {
 
 
 
-    // **************************************************
-    // *** Core Hooks (called from DeepaMehta 4 Core) ***
-    // **************************************************
+    // ********************************
+    // *** Listener Implementations ***
+    // ********************************
 
 
 
     @Override
-    public void serviceArrived(PluginService service) {
+    public void pluginServiceArrived(PluginService service) {
         logger.info("########## Service arrived: " + service);
         if (service instanceof FacetsService) {
             facetsService = (FacetsService) service;
@@ -143,7 +153,7 @@ public class GeomapsPlugin extends Plugin implements GeomapsService {
     }
 
     @Override
-    public void serviceGone(PluginService service) {
+    public void pluginServiceGone(PluginService service) {
         logger.info("########## Service gone: " + service);
         if (service == facetsService) {
             facetsService = null;
@@ -153,7 +163,7 @@ public class GeomapsPlugin extends Plugin implements GeomapsService {
     // ---
 
     @Override
-    public void postCreateHook(Topic topic, ClientState clientState, Directives directives) {
+    public void postCreateTopic(Topic topic, ClientState clientState, Directives directives) {
         if (topic.getTypeUri().equals("dm4.contacts.address")) {
             //
             facetsService.addFacetTypeToTopic(topic.getId(), "dm4.geomaps.geo_coordinate_facet");
@@ -170,8 +180,8 @@ public class GeomapsPlugin extends Plugin implements GeomapsService {
     }
 
     @Override
-    public void postUpdateHook(Topic topic, TopicModel newModel, TopicModel oldModel, ClientState clientState,
-                                                                                      Directives directives) {
+    public void postUpdateTopic(Topic topic, TopicModel newModel, TopicModel oldModel, ClientState clientState,
+                                                                                       Directives directives) {
         if (topic.getTypeUri().equals("dm4.contacts.address")) {
             Address address    = new Address(topic.getCompositeValue());
             Address oldAddress = new Address(oldModel.getCompositeValue());
@@ -191,7 +201,7 @@ public class GeomapsPlugin extends Plugin implements GeomapsService {
      * Enriches an Address topic with its Geo Coordinate facet.
      */
     @Override
-    public void preSendTopicHook(Topic topic, ClientState clientState) {
+    public void preSendTopic(Topic topic, ClientState clientState) {
         TopicModel address = findAddress(topic);
         if (address == null) {
             return;

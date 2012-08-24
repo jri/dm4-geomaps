@@ -34,7 +34,7 @@ function Geomap(topicmap_id, config) {
     }
 
     this.get_renderer_uri = function() {
-        return info.get("dm4.topicmaps.canvas_renderer_uri")
+        return info.get("dm4.topicmaps.topicmap_renderer_uri")
     }
 
     this.iterate_topics = function(visitor_func) {

@@ -13,14 +13,14 @@
     <parent>
         <groupId>de.deepamehta</groupId>
         <artifactId>deepamehta-parent</artifactId>
-        <version>2</version>
+        <version>3</version>
         <relativePath>../../modules/dm4-parent/pom.xml</relativePath>
     </parent>
 
     <dependencies>
         <dependency>
             <groupId>de.deepamehta</groupId>
-            <artifactId>deepamehta-webservice</artifactId>
+            <artifactId>deepamehta-core</artifactId>
             <version>4.0.12-SNAPSHOT</version>
         </dependency>
         <dependency>
