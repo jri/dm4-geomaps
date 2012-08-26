@@ -2,6 +2,7 @@ package de.deepamehta.plugins.geomaps;
 
 import de.deepamehta.plugins.geomaps.model.Geomap;
 import de.deepamehta.plugins.geomaps.service.GeomapsService;
+import de.deepamehta.plugins.topicmaps.service.TopicmapsService;
 import de.deepamehta.plugins.facets.service.FacetsService;
 
 import de.deepamehta.core.Association;
@@ -17,10 +18,9 @@ import de.deepamehta.core.model.TopicRoleModel;
 import de.deepamehta.core.osgi.PluginActivator;
 import de.deepamehta.core.service.ClientState;
 import de.deepamehta.core.service.CoreEvent;
-import de.deepamehta.core.service.Directive;
 import de.deepamehta.core.service.Directives;
-import de.deepamehta.core.service.Plugin;
 import de.deepamehta.core.service.PluginService;
+import de.deepamehta.core.service.listener.InitializePluginListener;
 import de.deepamehta.core.service.listener.PluginServiceArrivedListener;
 import de.deepamehta.core.service.listener.PluginServiceGoneListener;
 import de.deepamehta.core.service.listener.PostCreateTopicListener;
@@ -50,7 +50,8 @@ import java.util.logging.Logger;
 @Path("/geomap")
 @Consumes("application/json")
 @Produces("application/json")
-public class GeomapsPlugin extends PluginActivator implements GeomapsService, PluginServiceArrivedListener,
+public class GeomapsPlugin extends PluginActivator implements GeomapsService, InitializePluginListener,
+                                                                              PluginServiceArrivedListener,
                                                                               PluginServiceGoneListener,
                                                                               PostCreateTopicListener,
                                                                               PostUpdateTopicListener,
@@ -61,6 +62,7 @@ public class GeomapsPlugin extends PluginActivator implements GeomapsService, Pl
 
     // ---------------------------------------------------------------------------------------------- Instance Variables
 
+    private TopicmapsService topicmapsService;
     private FacetsService facetsService;
 
     private Logger logger = Logger.getLogger(getClass().getName());
@@ -145,10 +147,19 @@ public class GeomapsPlugin extends PluginActivator implements GeomapsService, Pl
 
 
     @Override
+    public void initializePlugin() {
+        topicmapsService.registerTopicmapRenderer(new GeomapRenderer());
+    }
+
+    // ---
+
+    @Override
     public void pluginServiceArrived(PluginService service) {
         logger.info("########## Service arrived: " + service);
         if (service instanceof FacetsService) {
             facetsService = (FacetsService) service;
+        } else if (service instanceof TopicmapsService) {
+            topicmapsService = (TopicmapsService) service;
         }
     }
 
@@ -157,6 +168,8 @@ public class GeomapsPlugin extends PluginActivator implements GeomapsService, Pl
         logger.info("########## Service gone: " + service);
         if (service == facetsService) {
             facetsService = null;
+        } else if (service == topicmapsService) {
+            topicmapsService = null;
         }
     }
 

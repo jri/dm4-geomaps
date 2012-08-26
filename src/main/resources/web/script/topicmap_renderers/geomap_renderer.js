@@ -97,17 +97,6 @@ function GeomapRenderer() {
         }
     }
 
-    this.initial_topicmap_state = function() {
-        var center = new OpenLayers.LonLat(11, 51)      // default state is "Germany"
-        return {
-            "dm4.topicmaps.translation": {
-                "dm4.topicmaps.translation_x": center.lon,
-                "dm4.topicmaps.translation_y": center.lat
-            },
-            "dm4.topicmaps.zoom_level": 6
-        }
-    }
-
     // === Left SplitPanel Component Implementation ===
 
     this.init = function() {
