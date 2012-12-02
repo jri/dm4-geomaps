@@ -141,7 +141,7 @@ function OpenLayersView(config) {
             //
             if (do_select) {
                 this.select_feature(topic.id)
-            }            
+            }
         }
 
         this.select_feature = function(topic_id) {

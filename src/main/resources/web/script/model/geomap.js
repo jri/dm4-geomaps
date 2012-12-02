@@ -69,6 +69,7 @@ function Geomap(topicmap_id, config) {
             if (LOG_GEOMAPS) dm4c.log("..... Updating topic " + t.id + " (x=" + t.x + ", y=" + t.y + ") on geomap " +
                 topicmap_id)
             t.update(topic)
+            // ### FIXME: check is_writable()
         }
     }
 
@@ -80,6 +81,7 @@ function Geomap(topicmap_id, config) {
         if (topic) {
             if (LOG_GEOMAPS) dm4c.log("..... Deleting topic " + id + " from geomap " + topicmap_id)
             topic.remove()
+            // ### FIXME: check is_writable()
         }
     }
 
@@ -146,7 +148,7 @@ function Geomap(topicmap_id, config) {
     // ---
 
     function is_writable() {
-        return config.is_writable()
+        return config.is_writable
     }
 
 

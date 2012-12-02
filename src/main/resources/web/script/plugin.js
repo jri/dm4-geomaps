@@ -9,7 +9,7 @@ dm4c.add_plugin("de.deepamehta.geomaps", function() {
 
     // === REST Client Extension ===
 
-    // Note: this is done at plugin instantiation time (*before* the webclient's init() hook is triggered)
+    // Note: this is done at plugin instantiation time (*before* the webclient's "init" event is fired)
     // because a geomap might be loaded at init() time through the topicmaps plugin.
 
     dm4c.restc.get_geomap = function(geomap_id) {

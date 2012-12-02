@@ -17,23 +17,18 @@ import de.deepamehta.core.model.TopicModel;
 import de.deepamehta.core.model.TopicRoleModel;
 import de.deepamehta.core.osgi.PluginActivator;
 import de.deepamehta.core.service.ClientState;
-import de.deepamehta.core.service.CoreEvent;
 import de.deepamehta.core.service.Directives;
 import de.deepamehta.core.service.PluginService;
-import de.deepamehta.core.service.listener.InitializePluginListener;
-import de.deepamehta.core.service.listener.PluginServiceArrivedListener;
-import de.deepamehta.core.service.listener.PluginServiceGoneListener;
-import de.deepamehta.core.service.listener.PostCreateTopicListener;
-import de.deepamehta.core.service.listener.PostUpdateTopicListener;
-import de.deepamehta.core.service.listener.PreSendTopicListener;
+import de.deepamehta.core.service.annotation.ConsumesService;
+import de.deepamehta.core.service.event.PostCreateTopicListener;
+import de.deepamehta.core.service.event.PostUpdateTopicListener;
+import de.deepamehta.core.service.event.PreSendTopicListener;
 import de.deepamehta.core.util.JavaUtils;
 
 import org.codehaus.jettison.json.JSONObject;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
-import javax.ws.rs.POST;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -50,10 +45,7 @@ import java.util.logging.Logger;
 @Path("/geomap")
 @Consumes("application/json")
 @Produces("application/json")
-public class GeomapsPlugin extends PluginActivator implements GeomapsService, InitializePluginListener,
-                                                                              PluginServiceArrivedListener,
-                                                                              PluginServiceGoneListener,
-                                                                              PostCreateTopicListener,
+public class GeomapsPlugin extends PluginActivator implements GeomapsService, PostCreateTopicListener,
                                                                               PostUpdateTopicListener,
                                                                               PreSendTopicListener {
 
@@ -95,9 +87,6 @@ public class GeomapsPlugin extends PluginActivator implements GeomapsService, In
                     true, false, clientState)) != null) {
                 topic = parentTopic;
             }
-            // ### TODO: firing PRE_SEND should not be up to the plugin developer.
-            // ### Possibly a JAX-RS 2.0 entity interceptor could be used instead.
-            dms.fireEvent(CoreEvent.PRE_SEND_TOPIC, topic, clientState);
             return topic;
         } catch (Exception e) {
             throw new WebApplicationException(new RuntimeException("Finding the geo coordinate's parent topic failed " +
@@ -140,22 +129,25 @@ public class GeomapsPlugin extends PluginActivator implements GeomapsService, In
 
 
 
-    // ********************************
-    // *** Listener Implementations ***
-    // ********************************
+    // ****************************
+    // *** Hook Implementations ***
+    // ****************************
 
 
 
     @Override
-    public void initializePlugin() {
+    public void init() {
         topicmapsService.registerTopicmapRenderer(new GeomapRenderer());
     }
 
     // ---
 
     @Override
-    public void pluginServiceArrived(PluginService service) {
-        logger.info("########## Service arrived: " + service);
+    @ConsumesService({
+        "de.deepamehta.plugins.topicmaps.service.TopicmapsService",
+        "de.deepamehta.plugins.facets.service.FacetsService"
+    })
+    public void serviceArrived(PluginService service) {
         if (service instanceof FacetsService) {
             facetsService = (FacetsService) service;
         } else if (service instanceof TopicmapsService) {
@@ -164,8 +156,7 @@ public class GeomapsPlugin extends PluginActivator implements GeomapsService, In
     }
 
     @Override
-    public void pluginServiceGone(PluginService service) {
-        logger.info("########## Service gone: " + service);
+    public void serviceGone(PluginService service) {
         if (service == facetsService) {
             facetsService = null;
         } else if (service == topicmapsService) {
@@ -173,7 +164,13 @@ public class GeomapsPlugin extends PluginActivator implements GeomapsService, In
         }
     }
 
-    // ---
+
+
+    // ********************************
+    // *** Listener Implementations ***
+    // ********************************
+
+
 
     @Override
     public void postCreateTopic(Topic topic, ClientState clientState, Directives directives) {
@@ -274,8 +271,8 @@ public class GeomapsPlugin extends PluginActivator implements GeomapsService, In
         }
         CompositeValue comp = topic.getCompositeValue();
         TopicType topicType = dms.getTopicType(typeUri, null);      // clientState=null
-        for (AssociationDefinition assocDef : topicType.getAssocDefs().values()) {
-            String childTypeUri   = assocDef.getPartTopicTypeUri();
+        for (AssociationDefinition assocDef : topicType.getAssocDefs()) {
+            String childTypeUri   = assocDef.getPartTypeUri();
             String cardinalityUri = assocDef.getPartCardinalityUri();
             TopicModel childTopic = null;
             if (cardinalityUri.equals("dm4.core.one")) {
